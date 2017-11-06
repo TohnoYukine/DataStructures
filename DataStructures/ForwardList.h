@@ -5,13 +5,14 @@
 
 namespace DataStructures
 {
-	template<class T> struct ForwardListNode;
-	template<typename T> class ForwardListIterator;
-	template<typename T> class ForwardListConstIterator;
-
 	template<typename T>
 	class ForwardList
 	{
+	private:
+		struct ForwardListNode;
+		class ForwardListIterator;
+		class ForwardListConstIterator;
+
 	public:
 		using value_type		= T;
 		using reference			= T&;
@@ -21,14 +22,17 @@ namespace DataStructures
 		using difference_type	= ptrdiff_t;
 		using size_type			= size_t;
 
-		using iterator			= ForwardListIterator<T>;
-		using const_iterator	= ForwardListConstIterator<T>;
+		using iterator			= ForwardListIterator;
+		using const_iterator	= ForwardListConstIterator;
 
 		//Constructor, Destructor and Assignment
 		ForwardList() noexcept;
 		explicit ForwardList(size_type n);
 		ForwardList(size_type n, const T& val);
-		ForwardList(const_iterator first, const_iterator last);
+
+		template<typename InputIterator, typename = typename std::enable_if_t<std::_Is_iterator<InputIterator>::value>>
+		ForwardList(InputIterator first, InputIterator last);
+
 		ForwardList(std::initializer_list<T> list);
 		ForwardList(const ForwardList<T>& origin);
 		ForwardList(ForwardList<T> && origin) noexcept;
@@ -38,7 +42,9 @@ namespace DataStructures
 		ForwardList<T>& operator=(std::initializer_list<T> origin);
 		void assign(size_type n, const T& val);
 		void assign(std::initializer_list<T> list);
-		template<class InputIterator> void assign(InputIterator first, InputIterator last);	//last not included
+
+		template<typename InputIterator, typename = typename std::enable_if_t<std::_Is_iterator<InputIterator>::value>>
+		void assign(InputIterator first, InputIterator last);	//last not included
 
 		//Element access
 		reference front();
@@ -127,7 +133,7 @@ namespace DataStructures
 		
 
 	private:
-		using node_type = ForwardListNode<T>;
+		using node_type = ForwardListNode;
 		//fore->first->...->last->end
 		node_type head;
 		node_type tail;	
@@ -135,81 +141,81 @@ namespace DataStructures
 		//Using end() from one container for operations on another is runtime_error,
 		//while using nullptr will hide this error.
 
-	};
-
-	template<class T>
-	struct ForwardListNode
-	{
-		T value;
-		ForwardListNode* next = nullptr;
-
-		ForwardListNode() {}
-		ForwardListNode(const T& val) : value(val) {}
-		ForwardListNode(const T& val, ForwardList<T>* p) : value(val), next(p) {}
-		ForwardListNode(T&& val) : value(std::move(val)) {}
-		ForwardListNode(T&& val, ForwardList<T>* p) : value(std::move(val)), next(p) {}
-		template<typename ...Args> ForwardListNode(ForwardList<T>* p, Args && ...args) :
-			value(std::forward<Args>(args)...), next(p) {}
-	};
-
-	template<typename T>
-	class ForwardListIterator
-	{
-	public:
-		using self_type = ForwardListIterator<T>;
-		using value_type = ForwardListNode<T>;
-		using reference = ForwardListNode<T>&;
-		using pointer = ForwardListNode<T>*;
-		using difference_type = ptrdiff_t;
-		using iterator_category = std::forward_iterator_tag;
-
-		ForwardListIterator() {}
-		ForwardListIterator(pointer _p) : p(_p) {}
-		ForwardListIterator(const ForwardListIterator<T>& origin) : p(origin.p) {}
-		ForwardListIterator<T>& operator=(ForwardListIterator<T>& origin) { p = origin.p; return *this; }
-
-		ForwardListIterator<T>& operator++() { p = p->next; return *this; }
-		ForwardListIterator<T> operator++(int) { ForwardListIterator ret{ *this }; ++*this; return ret; }
-		bool operator==(const ForwardListIterator<T>& rhs) const { return p == rhs.p; }
-		bool operator!=(const ForwardListIterator<T>& rhs) const { return p != rhs.p; }
-		reference operator*() { return *p; }
-		reference operator*() const { return *p; }	//Is this okay?
-		pointer operator->() { return p; }
-		pointer operator->() const { return p; }	//So does this?
-
 	private:
-		pointer p = nullptr;
-	};
+		struct ForwardListNode
+		{
+			T value;
+			ForwardListNode* next = nullptr;
 
-	template<typename T>
-	class ForwardListConstIterator
-	{
+			ForwardListNode() {}
+			ForwardListNode(const T& val) : value(val) {}
+			ForwardListNode(const T& val, ForwardListNode* p) : value(val), next(p) {}
+			ForwardListNode(T&& val) : value(std::move(val)) {}
+			ForwardListNode(T&& val, ForwardListNode* p) : value(std::move(val)), next(p) {}
+			template<typename ...Args> ForwardListNode(ForwardListNode* p, Args && ...args) :
+				value(std::forward<Args>(args)...), next(p) {}
+		};
+	
 	public:
-		using self_type = ForwardListConstIterator<T>;
-		using value_type = ForwardListNode<T>;
-		using reference = ForwardListNode<T>&;
-		using pointer = ForwardListNode<T>*;
-		using difference_type = ptrdiff_t;
-		using iterator_category = std::forward_iterator_tag;
+		class ForwardListIterator
+		{
+		public:
+			using self_type = ForwardListIterator;
+			using value_type = T;
+			using reference = T&;
+			using pointer = T*;
+			using difference_type = ptrdiff_t;
+			using iterator_category = std::forward_iterator_tag;
 
-		ForwardListConstIterator() {}
-		ForwardListConstIterator(pointer _p) : p(_p) {}
-		ForwardListConstIterator(const ForwardListConstIterator<T>& origin) : p(origin.p) {}
-		ForwardListConstIterator(const ForwardListIterator<T>& origin) : p(origin.p) {}
-		ForwardListConstIterator<T>& operator=(const ForwardListConstIterator<T>& origin) { p = origin.p; return *this; }
-		ForwardListConstIterator<T>& operator=(const ForwardListIterator<T>& origin) { p = origin.p; return *this; }
+			ForwardListIterator() {}
+			ForwardListIterator(ForwardListNode* _p) : p(_p) {}
+			ForwardListIterator(const ForwardListIterator& origin) : p(origin.p) {}
+			ForwardListIterator& operator=(ForwardListIterator& origin) { p = origin.p; return *this; }
 
-		ForwardListConstIterator<T>& operator++() { p = p->next; return *this; }
-		ForwardListConstIterator<T> operator++(int) { ForwardListIterator<T> ret{ *this }; ++*this; return ret; }
-		bool operator==(const ForwardListConstIterator<T>& rhs) const { return p == rhs.p; }
-		bool operator!=(const ForwardListConstIterator<T>& rhs) const { return p != rhs.p; }
-		const reference operator*() { return *p; }
-		const reference operator*() const { return *p; }	//Is this okay?
-		const pointer operator->() { return p; }
-		const pointer operator->() const { return p; }	//So does this?
+			ForwardListIterator& operator++() { p = p->next; return *this; }
+			ForwardListIterator operator++(int) { ForwardListIterator ret(*this); ++*this; return ret; }
+			bool operator==(const ForwardListIterator& rhs) const { return p == rhs.p; }
+			bool operator!=(const ForwardListIterator& rhs) const { return p != rhs.p; }
+			reference operator*() { return p->value; }
+			reference operator*() const { return p->value; }	//Is this okay?
+			pointer operator->() { return &p->value; }
+			pointer operator->() const { return &p->value; }	//So does this?
 
-	private:
-		pointer p = nullptr;
+		private:
+			template<typename T> friend class ForwardList;
+			ForwardListNode* p = nullptr;
+		};
+
+		class ForwardListConstIterator
+		{
+		public:
+			using self_type = ForwardListConstIterator;
+			using value_type = T;
+			using reference = const T&;
+			using pointer = const T*;
+			using difference_type = ptrdiff_t;
+			using iterator_category = std::forward_iterator_tag;
+
+			ForwardListConstIterator() {}
+			ForwardListConstIterator(const ForwardListNode* _p) : p(_p) {}
+			ForwardListConstIterator(const ForwardListConstIterator& origin) : p(origin.p) {}
+			ForwardListConstIterator(const ForwardListIterator& origin) : p(origin.p) {}
+			ForwardListConstIterator& operator=(const ForwardListConstIterator& origin) { p = origin.p; return *this; }
+			ForwardListConstIterator& operator=(const ForwardListIterator& origin) { p = origin.p; return *this; }
+
+			ForwardListConstIterator& operator++() { p = p->next; return *this; }
+			ForwardListConstIterator operator++(int) { ForwardListConstIterator ret(*this); ++*this; return ret; }
+			bool operator==(const ForwardListConstIterator& rhs) const { return p == rhs.p; }
+			bool operator!=(const ForwardListConstIterator& rhs) const { return p != rhs.p; }
+			reference operator*() { return p->value; }
+			reference operator*() const { return p->value; }	//Is this okay?
+			pointer operator->() { return &p->value; }
+			pointer operator->() const { return &p->value; }	//So does this?
+
+		private:
+			template<typename T> friend class ForwardList;
+			const ForwardListNode* p = nullptr;
+		};
 	};
 
 	/* Dividing Line (д├ бузе бу;)д├ (д├ бузе бу;)д├ (д├ бузе бу;)д├  */
@@ -221,7 +227,7 @@ namespace DataStructures
 	}
 
 	template<typename T>
-	inline ForwardList<T>::ForwardList(size_type n)
+	inline ForwardList<T>::ForwardList(size_type n) : ForwardList<T>()
 	{
 		//node_type* curr = &head;
 		//for (size_t i = 0; i < n; i++)
@@ -230,14 +236,17 @@ namespace DataStructures
 		//	curr = curr->next;
 		//}
 		//curr->next = &tail;
-		iterator curr = begin();
+		iterator curr = before_begin();
 		for (size_t i = 0; i < n; i++)
-			curr++->next = new node_type();
-		curr->next = end().p;
+		{
+			curr.p->next = new node_type(T());
+			++curr;
+		}
+		curr.p->next = end().p;
 	}
 
 	template<typename T>
-	inline ForwardList<T>::ForwardList(size_type n, const T & val)
+	inline ForwardList<T>::ForwardList(size_type n, const T & val) : ForwardList<T>()
 	{
 		//node_type* curr = &head;
 		//for (size_t i = 0; i < n; i++)
@@ -246,14 +255,18 @@ namespace DataStructures
 		//	curr = curr->next;
 		//}
 		//curr->next = &tail;
-		iterator curr = begin();
+		iterator curr = before_begin();
 		for (size_t i = 0; i < n; i++)
-			curr++->next = new node_type(val);
-		curr->next = end().p;
+		{
+			curr.p->next = new node_type(val);
+			++curr;
+		}
+		curr.p->next = end().p;
 	}
 
 	template<typename T>
-	inline ForwardList<T>::ForwardList(const_iterator first, const_iterator last)
+	template<typename InputIterator, typename SFINAE_MAGIC>
+	inline ForwardList<T>::ForwardList(InputIterator first, InputIterator last) : ForwardList<T>()
 	{
 		//node_type* curr = &head;
 		//while (first != last)
@@ -262,10 +275,13 @@ namespace DataStructures
 		//	curr = curr->next;
 		//}
 		//curr->next = &tail;
-		iterator curr = begin();
+		iterator curr = before_begin();
 		while (first != last)
-			curr++->next = new node_type(*first++);
-		curr->next = end().p;
+		{
+			curr.p->next = new node_type(*first++);
+			++curr;
+		}		
+		curr.p->next = end().p;
 	}
 
 	template<typename T>
@@ -283,6 +299,7 @@ namespace DataStructures
 	template<typename T>
 	inline ForwardList<T>::ForwardList(ForwardList<T>&& origin) noexcept
 	{
+		head.next = &tail;
 		swap(origin);
 	}
 
@@ -404,8 +421,11 @@ namespace DataStructures
 		//	curr->next != nullptr; prev = curr, curr = curr->next)
 		//	delete prev;
 		//head.next = &tail;
-		for (iterator prev = before_begin(), curr = begin(); curr != end(); prev = curr++)
+		for (iterator prev = begin(), curr = begin(); curr != end(); prev = curr)
+		{
+			curr++;
 			delete prev.p;
+		}
 		head.next = &tail;
 	}
 
@@ -441,7 +461,7 @@ namespace DataStructures
 	inline typename ForwardList<T>::iterator ForwardList<T>::erase_after(const_iterator pos)
 	{
 		iterator ret = pos++;
-		ret->next = pos->next;
+		ret.p->next = pos.p->next;
 		delete pos.p;
 		return ret;
 	}
@@ -449,7 +469,7 @@ namespace DataStructures
 	template<typename T>
 	inline typename ForwardList<T>::iterator ForwardList<T>::erase_after(const_iterator first, const_iterator last)
 	{
-		while (first->next != last.p)
+		while (first.p->next != last.p)
 			first = erase_after(first);	//Must refresh first!
 		return first;
 	}
@@ -505,7 +525,7 @@ namespace DataStructures
 	}
 
 	template<typename T>
-	template<class InputIterator>
+	template<typename InputIterator, typename SFINAE_MAGIC>
 	inline void ForwardList<T>::assign(InputIterator first, InputIterator last)
 	{
 		swap(ForwardList<T>(first, last));
@@ -524,7 +544,7 @@ namespace DataStructures
 	template<typename ...Args>
 	inline typename ForwardList<T>::iterator ForwardList<T>::emplace_after(const_iterator pos, Args && ...args)
 	{
-		return pos->next = new ForwardListNode<T>(pos->next, std::forward<Args>(args) ...);
+		return pos.p->next = new ForwardListNode<T>(pos.p->next, std::forward<Args>(args) ...);
 	}
 
 	template<typename T>
@@ -538,6 +558,30 @@ namespace DataStructures
 	inline void ForwardList<T>::swap(ForwardList<T>& other)
 	{
 		std::swap(head.next, other.head.next);
-		std::swap(before_end()->next, other.before_end()->next);
+		std::swap(before_end().p->next, other.before_end().p->next);
+	}
+
+	template<typename T>
+	inline typename ForwardList<T>::iterator ForwardList<T>::before_end() noexcept
+	{
+		iterator curr = before_begin();
+		while (curr.p->next != end().p) ++curr;
+		return curr;
+	}
+
+	template<typename T>
+	inline typename ForwardList<T>::const_iterator ForwardList<T>::before_end() const noexcept
+	{
+		const_iterator curr = cbefore_begin();
+		while (curr.p->next != cend().p) ++curr;
+		return curr;
+	}
+
+	template<typename T>
+	inline typename ForwardList<T>::const_iterator ForwardList<T>::cbefore_end() const noexcept
+	{
+		const_iterator curr = cbefore_begin();
+		while (curr.p->next != cend().p) ++curr;
+		return curr;
 	}
 }
