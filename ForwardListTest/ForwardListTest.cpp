@@ -19,6 +19,7 @@
 #include <vector>
 #include <iomanip>
 #include <string>
+#include <forward_list>
 #include "ForwardList.h"
 #include "ForwardListTest.h"
 
@@ -59,12 +60,13 @@ int main()
 	_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDOUT);
 
 	//Testers here
-	ConstructorTester();
+	//ConstructorTester();
 	//AssignmentTester();
 	//ElementAccessTester();
 	//IteratorsTester();
 	//CapacityTester();
 	//ModifiersTester();
+	OperationsTester();
 	//NonMemberFunctionsTester();
 
 	//Report all memory leaks
@@ -94,7 +96,7 @@ void ConstructorTester()
 	//(7) Allocator-extended move constructor.
 	//ForwardList does not use allocator.
 	//(8) Constructs the container with the contents of the initializer list.
-	//DS::ForwardList<int> fwdls7{ 0,1,2,3,4,5,6,7,8,9 };
+	DS::ForwardList<int> fwdls7{ 0,1,2,3,4,5,6,7,8,9 };
 
 	print(fwdls1);
 	print(fwdls2);
@@ -104,15 +106,10 @@ void ConstructorTester()
 	print(fwdls4_2);
 	print(fwdls5);
 	print(tempfwdls);
-	cout << std::boolalpha
-		<< (fwdls1.begin() == fwdls1.before_end()) << '\n'
-		<< (fwdls1.begin() == fwdls1.end()) << '\n'
-		<< (fwdls1.before_begin() == fwdls1.before_end()) << '\n';
-
-	//print(fwdls6);
-	//print(fwdls7);
+	print(fwdls6);
+	print(fwdls7);
 }
-/*
+
 void AssignmentTester()
 {
 	DS::ForwardList<double> fwdls{ 0,1,2,3,4,5,6,7,8,9 };
@@ -128,7 +125,7 @@ void AssignmentTester()
 	DS::ForwardList<int> fwdls4{ 1,2 };
 	fwdls4.assign(7, 9);
 	DS::ForwardList<double> fwdls5{ 1,2 };
-	fwdls5.assign(fwdls4.begin() + 3, fwdls4.end());
+	fwdls5.assign(++++fwdls4.begin(), fwdls4.end());
 	DS::ForwardList<double> fwdls6{ 1,2 };
 	fwdls6.assign({ 7,8,9 });
 
@@ -140,68 +137,33 @@ void AssignmentTester()
 	print(fwdls5);
 	print(fwdls6);
 }
-*/
 
-/*
 void ElementAccessTester()
 {
-	DS::ForwardList<int> fwdls{ 0,1,2,3,4,5,6,7,8,9 };
-
-	//at(size_type index)
-	try
-	{
-		for (size_t i = 0; i < 11; i++) cout << fwdls.at(i)++ << ' ';
-	}
-	catch (const std::exception& ex)
-	{
-		cout << ex.what() << '\n';
-	}
-
-	//operator[](size_type index)
-	try
-	{
-		for (size_t i = 0; i < 11; i++) cout << fwdls.at(i)-- << ' ';
-	}
-	catch (const std::exception& ex)
-	{
-		cout << ex.what() << '\n';
-	}
+	DS::ForwardList<int> fwdls{ 7,1,2,3,4,5,6,7,8,9 };
 
 	//front()
 	cout << fwdls.front() << '\n';
-
-	//back()
-	cout << fwdls.back() << '\n';
-
-	//data()
-	try
-	{
-		cout << fwdls.data() << '\n';
-		for (size_t i = 0; i <= fwdls.size(); i++)
-			cout << fwdls.data()[i]++ << ' ';
-	}
-	catch (const std::exception& ex)
-	{
-		cout << ex.what() << '\n';
-	}
 }
-*/
 
-/*
 void IteratorsTester()
 {
 	DS::ForwardList<char> fwdls;
-	for (size_t i = 0; i < 26; i++) fwdls.push_back(static_cast<char>('a' + i));
+	for (size_t i = 0; i < 26; i++) fwdls.insert_after(fwdls.before_begin(), static_cast<char>('z' - i));
 	const DS::ForwardList<char> cfwdls(fwdls.begin(), fwdls.end());
 
+	//Normal version
 	for (DS::ForwardList<char>::iterator curr = fwdls.begin(); curr != fwdls.end(); ++curr)
-		cout << (*curr)-- << ' ';
+		cout << (*curr)++ << ' ';
 	cout << '\n';
+
+	fwdls.erase_after(fwdls.before_begin());
 
 	for (DS::ForwardList<char>::const_iterator curr = fwdls.cbegin(); curr != fwdls.cend(); ++curr)
 		cout << *curr << ' ';
 	cout << '\n';
 
+	//Const version
 	for (DS::ForwardList<char>::const_iterator curr = cfwdls.begin(); curr != cfwdls.end(); ++curr)
 		cout << *curr << ' ';
 	cout << '\n';
@@ -209,50 +171,20 @@ void IteratorsTester()
 	for (DS::ForwardList<char>::const_iterator curr = cfwdls.cbegin(); curr != cfwdls.cend(); ++curr)
 		cout << *curr << ' ';
 	cout << '\n';
-
-	for (DS::ForwardList<char>::reverse_iterator curr = fwdls.rbegin(); curr != fwdls.rend(); ++curr)
-		cout << (*curr)++ << ' ';
-	cout << '\n';
-
-	for (DS::ForwardList<char>::const_reverse_iterator curr = fwdls.crbegin(); curr != fwdls.crend(); ++curr)
-		cout << *curr << ' ';
-	cout << '\n';
-
-	for (DS::ForwardList<char>::const_reverse_iterator curr = cfwdls.rbegin(); curr != cfwdls.rend(); ++curr)
-		cout << *curr << ' ';
-	cout << '\n';
-
-	for (DS::ForwardList<char>::const_reverse_iterator curr = cfwdls.crbegin(); curr != cfwdls.crend(); ++curr)
-		cout << *curr << ' ';
-	cout << '\n';
 }
-*/
 
-/*
 void CapacityTester()
 {
 	DS::ForwardList<int> fwdls{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 	print(fwdls);
 	cout << std::boolalpha << fwdls.empty() << '\n'
-		<< fwdls.size() << '\n'
-		<< fwdls.max_size() << '\n'
-		<< fwdls.capacity() << '\n';
-	fwdls.reserve(100);
+		<< fwdls.max_size() << '\n';
+	fwdls.clear();
 	print(fwdls);
 	cout << std::boolalpha << fwdls.empty() << '\n'
-		<< fwdls.size() << '\n'
-		<< fwdls.max_size() << '\n'
-		<< fwdls.capacity() << '\n';
-	fwdls.shrink_to_fit();
-	print(fwdls);
-	cout << std::boolalpha << fwdls.empty() << '\n'
-		<< fwdls.size() << '\n'
-		<< fwdls.max_size() << '\n'
-		<< fwdls.capacity() << '\n';
+		<< fwdls.max_size() << '\n';
 }
-*/
 
-/*
 void ModifiersTester()
 {
 	DS::ForwardList<int> fwdls{ 1,2,3 };
@@ -265,38 +197,41 @@ void ModifiersTester()
 
 	//insert();
 	int a = 10;
-	DS::ForwardList<int>::iterator pos = fwdls.insert(fwdls.end(), a++);
+	DS::ForwardList<int>::iterator pos = fwdls.insert_after(fwdls.before_begin(), a++);
 	print(fwdls);
-	pos = fwdls.insert(pos, a++);
+	pos = fwdls.insert_after(pos, a++);
 	print(fwdls);
-	pos = fwdls.insert(pos, std::move(a));
+	pos = fwdls.insert_after(pos, std::move(a));
 	print(fwdls);
-	pos = fwdls.insert(pos, fwdls2.begin(), fwdls2.end());
+	pos = fwdls.insert_after(pos, 10, 42);
 	print(fwdls);
-	pos = fwdls.insert(pos, { 2,2,2 });
+	pos = fwdls.insert_after(pos, fwdls2.begin(), fwdls2.end());
 	print(fwdls);
-
-	//emplace()
-	pos = fwdls.emplace(fwdls.cbegin() + 1, 77);
+	pos = fwdls.insert_after(pos, { 2,2,2 });
 	print(fwdls);
 
-	//erase()
-	pos = fwdls.erase(pos);
-	print(fwdls);
-	pos = fwdls.erase(pos, pos + 2);
+	//emplace_after()
+	pos = fwdls.emplace_after(++fwdls.cbegin(), 77);
 	print(fwdls);
 
-	//push_back()
-	DS::ForwardList<std::string> sfwdls{ "Hello" };
-	sfwdls.push_back(std::string("!"));
+	//erase_after()
+	pos = fwdls.erase_after(pos);
+	print(fwdls);
+	
+	pos = fwdls.erase_after(++++pos, fwdls.before_end());
+	print(fwdls);
+
+	//push_front()
+	DS::ForwardList<std::string> sfwdls{ "!" };
+	sfwdls.push_front(std::string("Hello"));
 	print(sfwdls);
 
-	//pop_back()
-	sfwdls.pop_back();
+	//pop_front()
+	sfwdls.pop_front();
 	print(sfwdls);
 
-	//emplace_back()
-	cout << sfwdls.emplace_back("world") << '\n';
+	//emplace_front()
+	cout << sfwdls.emplace_front("?") << '\n';
 	print(sfwdls);
 
 	//resize()
@@ -309,7 +244,7 @@ void ModifiersTester()
 	sfwdls.swap(DS::ForwardList<std::string>{ "Hello, world!", "Hello, C++!" });
 	print(sfwdls);
 }
-*/
+
 
 void OperationsTester()
 {

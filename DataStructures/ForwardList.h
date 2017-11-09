@@ -33,11 +33,11 @@ namespace DataStructures
 		template<typename InputIterator, typename = typename std::enable_if_t<std::_Is_iterator<InputIterator>::value>>
 		ForwardList(InputIterator first, InputIterator last);
 
-		ForwardList(std::initializer_list<T> list);
+		ForwardList(std::initializer_list<T> init);
 		ForwardList(const ForwardList<T>& origin);
 		ForwardList(ForwardList<T> && origin) noexcept;
 		~ForwardList();
-		ForwardList<T>& operator=(ForwardList<T> origin);
+		ForwardList<T>& operator=(const ForwardList<T>& origin);
 		ForwardList<T>& operator=(ForwardList<T>&& origin);
 		ForwardList<T>& operator=(std::initializer_list<T> origin);
 		void assign(size_type n, const T& val);
@@ -69,15 +69,16 @@ namespace DataStructures
 		void clear() noexcept;
 		iterator insert_after(const_iterator pos, const T& val);
 		iterator insert_after(const_iterator pos, T&& val);
-		iterator insert_after(const_iterator pos, size_type n, T& val);
+		iterator insert_after(const_iterator pos, size_type n, const T& val);
 		iterator insert_after(const_iterator pos, std::initializer_list<T> list);
-		template<typename InputIterator> iterator insert_after(const_iterator pos, InputIterator first, InputIterator last);
+		template<typename InputIterator, typename = typename std::enable_if_t<std::_Is_iterator<InputIterator>::value>>
+		iterator insert_after(const_iterator pos, InputIterator first, InputIterator last);
 		template <typename ... Args> iterator emplace_after(const_iterator pos, Args&& ... args);
 		iterator erase_after(const_iterator pos);
 		iterator erase_after(const_iterator first, const_iterator last);
 		void push_front(const T& val);
 		void push_front(T&& val);
-		template <typename ... Args> void emplace_front(Args&& ... args);
+		template <typename ... Args> reference emplace_front(Args&& ... args);
 		void pop_front();
 		void resize(size_type n);
 		void resize(size_type n, const T& val);
@@ -109,7 +110,8 @@ namespace DataStructures
 		iterator insert(const_iterator pos, T&& val);
 		iterator insert(const_iterator pos, size_type n, T& val);
 		iterator insert(const_iterator pos, std::initializer_list<T> list);
-		template<typename InputIterator> iterator insert(const_iterator pos, InputIterator first, InputIterator last);
+		template<typename InputIterator, typename = typename std::enable_if_t<std::_Is_iterator<InputIterator>::value>>
+		iterator insert(const_iterator pos, InputIterator first, InputIterator last);
 		template <typename ... Args> iterator emplace(const_iterator pos, Args&& ... args);
 		iterator erase(const_iterator pos);
 		iterator erase(const_iterator first, const_iterator last);
@@ -310,9 +312,9 @@ namespace DataStructures
 	}
 
 	template<typename T>
-	inline ForwardList<T>& ForwardList<T>::operator=(ForwardList<T> origin)
+	inline ForwardList<T>& ForwardList<T>::operator=(const ForwardList<T>& origin)
 	{
-		swap(origin);
+		swap(ForwardList<T>(origin));
 		return *this;
 	}
 
@@ -326,7 +328,7 @@ namespace DataStructures
 	template<typename T>
 	inline ForwardList<T>& ForwardList<T>::operator=(std::initializer_list<T> origin)
 	{
-		swap(origin);
+		swap(ForwardList<T>(origin));
 		return *this;
 	}
 
@@ -337,9 +339,9 @@ namespace DataStructures
 	}
 
 	template<typename T>
-	inline void ForwardList<T>::assign(std::initializer_list<T> list)
+	inline void ForwardList<T>::assign(std::initializer_list<T> init)
 	{
-		swap(list);
+		swap(ForwardList<T>(init));
 	}
 
 	template<typename T>
@@ -442,36 +444,41 @@ namespace DataStructures
 	}
 
 	template<typename T>
-	inline typename ForwardList<T>::iterator ForwardList<T>::insert_after(const_iterator pos, size_type n, T & val)
+	inline typename ForwardList<T>::iterator ForwardList<T>::insert_after(const_iterator pos, size_type n, const T & val)
 	{
+		iterator ret(const_cast<ForwardListNode*>(pos.p));
 		for (size_t i = 0; i < n; i++)
-			pos = insert_after(pos, val);
-		return pos;
+			ret = emplace_after(ret, val);
+		return ret;
 	}
 
 	template<typename T>
 	inline typename ForwardList<T>::iterator ForwardList<T>::insert_after(const_iterator pos, std::initializer_list<T> list)
 	{
+		iterator ret(const_cast<ForwardListNode*>(pos.p));
 		for (const T& elem : list)
-			pos = insert_after(pos, val);
-		return pos;
+			ret = emplace_after(ret, elem);
+		return ret;
 	}
 
 	template<typename T>
 	inline typename ForwardList<T>::iterator ForwardList<T>::erase_after(const_iterator pos)
 	{
-		iterator ret = pos++;
-		ret.p->next = pos.p->next;
-		delete pos.p;
-		return ret;
+		iterator _next(const_cast<ForwardListNode*>(pos.p));
+		iterator _curr = _next++;
+		_curr.p->next = _next.p->next;
+		delete _next.p;
+		return _curr;
 	}
 
 	template<typename T>
 	inline typename ForwardList<T>::iterator ForwardList<T>::erase_after(const_iterator first, const_iterator last)
 	{
-		while (first.p->next != last.p)
-			first = erase_after(first);	//Must refresh first!
-		return first;
+		iterator ret(const_cast<ForwardListNode*>(first.p));
+		iterator _last(const_cast<ForwardListNode*>(last.p));
+		while (ret.p->next != _last.p)
+			ret = erase_after(ret);	//Must refresh first!
+		return ret;
 	}
 
 	template<typename T>
@@ -512,16 +519,20 @@ namespace DataStructures
 	inline void ForwardList<T>::resize(size_type n, const T & val)
 	{
 		size_type cnt = 0;
-		iterator curr = begin();
-		while (curr != end())
+		iterator curr = before_begin();
+		while (true)
 		{
-			++cnt;
 			if (cnt == n)
+			{
 				curr = erase_after(curr, end());
+				break;
+			}
+			if (curr.p->next == end().p)
+				break;
+			++cnt;
 			++curr;
 		}
-		for (size_t i = cnt; i < n; i++)
-			insert_after(curr, n, val);
+		insert_after(curr, n - cnt, val);
 	}
 
 	template<typename T>
@@ -532,40 +543,64 @@ namespace DataStructures
 	}
 
 	template<typename T>
-	template<typename InputIterator>
+	template<typename InputIterator, typename SFINAE_MAGIC>
 	inline typename ForwardList<T>::iterator ForwardList<T>::insert_after(const_iterator pos, InputIterator first, InputIterator last)
 	{
+		iterator ret(const_cast<ForwardListNode*>(pos.p));
 		while (first != last)
-			pos = insert_after(pos, *first++);
-		return pos;
+			ret = emplace_after(ret, *first++);
+		return ret;
 	}
 
 	template<typename T>
 	template<typename ...Args>
 	inline typename ForwardList<T>::iterator ForwardList<T>::emplace_after(const_iterator pos, Args && ...args)
 	{
-		return pos.p->next = new ForwardListNode<T>(pos.p->next, std::forward<Args>(args) ...);
+		iterator _iter(const_cast<ForwardListNode*>(pos.p));
+		return _iter.p->next = new ForwardListNode(_iter.p->next, std::forward<Args>(args) ...);
+		return _iter;
 	}
 
 	template<typename T>
 	template<typename ...Args>
-	inline void ForwardList<T>::emplace_front(Args && ...args)
+	inline typename ForwardList<T>::reference ForwardList<T>::emplace_front(Args && ...args)
 	{
-		head.next = new ForwardListNode<T>(head.next, std::forward<Args>(args) ...);
+		return (head.next = new ForwardListNode(head.next, std::forward<Args>(args) ...))->value;
 	}
 
 	template<typename T>
 	inline void ForwardList<T>::swap(ForwardList<T>& other)
 	{
-		std::swap(head.next, other.head.next);
-		std::swap(before_end().p->next, other.before_end().p->next);
+		if (!empty() && !other.empty())
+		{
+			//Swap the tail first, finding the before tail node needs the head!
+			std::swap(before_end().p->next, other.before_end().p->next);
+			std::swap(head.next, other.head.next);
+		}
+		else if (empty() && other.empty())
+		{
+			return;
+		}
+		else if (empty())
+		{
+			other.before_end().p->next = &tail;
+			head.next = other.head.next;
+			other.head.next = &other.tail;
+		}
+		else	//Only other is empty
+		{
+			before_end().p->next = &other.tail;
+			other.head.next = head.next;
+			head.next = &tail;
+		}
 	}
 
 	template<typename T>
 	inline typename ForwardList<T>::iterator ForwardList<T>::before_end() noexcept
 	{
 		iterator curr = before_begin();
-		while (curr.p->next != end().p) ++curr;
+		while (curr.p->next != end().p) 
+			++curr;
 		return curr;
 	}
 
