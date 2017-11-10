@@ -217,6 +217,10 @@ void IteratorsTester()
 	for (DS::Vector<char>::const_reverse_iterator curr = cvec.crbegin(); curr != cvec.crend(); ++curr)
 		cout << *curr << ' ';
 	cout << '\n';
+
+	DS::Vector<std::string> svec{ "Hello", "World" };
+	print(svec);
+	cout << svec.begin()->size() << '\n';
 }
 
 void CapacityTester()

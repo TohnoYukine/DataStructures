@@ -63,10 +63,10 @@ int main()
 	//ConstructorTester();
 	//AssignmentTester();
 	//ElementAccessTester();
-	//IteratorsTester();
+	IteratorsTester();
 	//CapacityTester();
 	//ModifiersTester();
-	OperationsTester();
+	//OperationsTester();
 	//NonMemberFunctionsTester();
 
 	//Report all memory leaks
@@ -171,6 +171,10 @@ void IteratorsTester()
 	for (DS::ForwardList<char>::const_iterator curr = cfwdls.cbegin(); curr != cfwdls.cend(); ++curr)
 		cout << *curr << ' ';
 	cout << '\n';
+
+	DS::ForwardList<std::string> sfwdls{ "Hello", "World" };
+	print(sfwdls);
+	cout << sfwdls.begin()->size() << '\n';
 }
 
 void CapacityTester()
@@ -244,7 +248,6 @@ void ModifiersTester()
 	sfwdls.swap(DS::ForwardList<std::string>{ "Hello, world!", "Hello, C++!" });
 	print(sfwdls);
 }
-
 
 void OperationsTester()
 {
