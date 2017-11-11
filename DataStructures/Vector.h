@@ -23,10 +23,9 @@ namespace DataStructures
 		using const_reverse_iterator	= std::reverse_iterator<const_iterator>;
 
 		//Constructor, Destructor and Assignment
-		Vector() noexcept;
+		explicit Vector() noexcept;
 		explicit Vector(size_type n);
-		Vector(size_type n, const T& val);
-		Vector(const_iterator first, const_iterator last);
+		explicit Vector(size_type n, const T& val);
 
 		template<typename InputIterator, typename = typename std::enable_if_t<std::_Is_iterator<InputIterator>::value>>
 		Vector(InputIterator first, InputIterator last);
@@ -138,17 +137,6 @@ namespace DataStructures
 		storage = new T[reserved_size];
 		for (size_type i = 0; i < n; i++)
 			storage[i] = val;
-	}
-
-	template<typename T>
-	inline Vector<T>::Vector(const_iterator first, const_iterator last)
-	{
-		size_type count = last - first;
-		vector_size = count;
-		reserved_size = count + count / 2 + 1;
-		storage = new T[reserved_size];
-		for (size_type i = 0; i < count; i++)
-			storage[i] = *first++;
 	}
 
 	template<typename T>
