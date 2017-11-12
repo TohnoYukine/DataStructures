@@ -32,11 +32,11 @@ namespace DataStructures
 
 		Vector(std::initializer_list<T> init);
 		Vector(const Vector& origin);
-		Vector(Vector<T> && origin) noexcept;
+		Vector(Vector&& origin) noexcept;
 		~Vector();
-		Vector<T>& operator=(const Vector<T>& origin);	//Assign will modify reserved_size to origin.reserved_size, which behaves differently from STL vector.
-		Vector<T>& operator=(Vector<T>&& origin);
-		Vector<T>& operator=(std::initializer_list<T> init);
+		Vector& operator=(const Vector& origin);	//Assign will modify reserved_size to origin.reserved_size, which behaves differently from STL vector.
+		Vector& operator=(Vector&& origin);
+		Vector& operator=(std::initializer_list<T> init);
 		void assign(size_type n, const T& val);
 		void assign(std::initializer_list<T> init);
 		template<typename InputIterator, typename = typename std::enable_if_t<std::_Is_iterator<InputIterator>::value>> 
@@ -151,7 +151,7 @@ namespace DataStructures
 	}
 
 	template<typename T>
-	inline Vector<T>::Vector(const Vector &origin)
+	inline Vector<T>::Vector(const Vector& origin)
 	{
 		vector_size = origin.vector_size;
 		reserved_size = origin.reserved_size;
@@ -161,7 +161,7 @@ namespace DataStructures
 	}
 
 	template<typename T>
-	inline Vector<T>::Vector(Vector<T>&& origin) noexcept
+	inline Vector<T>::Vector(Vector&& origin) noexcept
 	{
 		swap(origin);
 	}
@@ -174,9 +174,9 @@ namespace DataStructures
 	}
 
 	template<typename T>
-	inline Vector<T>& Vector<T>::operator=(const Vector<T>& origin)
+	inline Vector<T>& Vector<T>::operator=(const Vector& origin)
 	{
-		swap(Vector<T>(origin));
+		swap(Vector(origin));
 		return *this;
 	}
 
@@ -190,20 +190,20 @@ namespace DataStructures
 	template<typename T>
 	inline Vector<T>& Vector<T>::operator=(std::initializer_list<T> init)
 	{
-		swap(Vector<T>(init));
+		swap(Vector(init));
 		return *this;
 	}
 
 	template<typename T>
 	inline void Vector<T>::assign(size_type n, const T & val)
 	{
-		swap(Vector<T>(n, val));
+		swap(Vector(n, val));
 	}
 
 	template<typename T>
 	inline void Vector<T>::assign(std::initializer_list<T> init)
 	{
-		swap(Vector<T>(init));
+		swap(Vector(init));
 	}
 
 	template<typename T>
@@ -223,7 +223,7 @@ namespace DataStructures
 	template<typename InputIterator, typename SFINAE_MAGIC>
 	inline void Vector<T>::assign(InputIterator first, InputIterator last)
 	{
-		swap(Vector<T>(first, last));
+		swap(Vector(first, last));
 	}
 
 	template<typename T>
