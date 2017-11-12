@@ -143,6 +143,10 @@ namespace DataStructures
 		//Using end() from one container for operations on another is runtime_error,
 		//while using nullptr will hide this error.
 
+	//Helper functions
+	private:
+		void move_after(iterator& from, iterator& to);	//Moves the node after "from" to after "to".
+
 	private:
 		struct ForwardListNode
 		{
@@ -182,6 +186,9 @@ namespace DataStructures
 			reference operator*() const { return p->value; }	//Is this okay?
 			pointer operator->() { return &p->value; }
 			pointer operator->() const { return &p->value; }	//So does this?
+
+		private:
+			ForwardListIterator(const ForwardListConstIterator& origin) : p(const_cast<ForwardListNode*>(origin.p)) {}
 
 		private:
 			template<typename T> friend class ForwardList;
@@ -446,7 +453,7 @@ namespace DataStructures
 	template<typename T>
 	inline typename ForwardList<T>::iterator ForwardList<T>::insert_after(const_iterator pos, size_type n, const T & val)
 	{
-		iterator ret(const_cast<ForwardListNode*>(pos.p));
+		iterator ret(pos);
 		for (size_t i = 0; i < n; i++)
 			ret = emplace_after(ret, val);
 		return ret;
@@ -455,7 +462,7 @@ namespace DataStructures
 	template<typename T>
 	inline typename ForwardList<T>::iterator ForwardList<T>::insert_after(const_iterator pos, std::initializer_list<T> list)
 	{
-		iterator ret(const_cast<ForwardListNode*>(pos.p));
+		iterator ret(pos);
 		for (const T& elem : list)
 			ret = emplace_after(ret, elem);
 		return ret;
@@ -464,7 +471,7 @@ namespace DataStructures
 	template<typename T>
 	inline typename ForwardList<T>::iterator ForwardList<T>::erase_after(const_iterator pos)
 	{
-		iterator _next(const_cast<ForwardListNode*>(pos.p));
+		iterator _next(pos);
 		iterator _curr = _next++;
 		_curr.p->next = _next.p->next;
 		delete _next.p;
@@ -474,8 +481,8 @@ namespace DataStructures
 	template<typename T>
 	inline typename ForwardList<T>::iterator ForwardList<T>::erase_after(const_iterator first, const_iterator last)
 	{
-		iterator ret(const_cast<ForwardListNode*>(first.p));
-		iterator _last(const_cast<ForwardListNode*>(last.p));
+		iterator ret(first);
+		iterator _last(last);
 		while (ret.p->next != _last.p)
 			ret = erase_after(ret);	//Must refresh first!
 		return ret;
@@ -546,7 +553,7 @@ namespace DataStructures
 	template<typename InputIterator, typename SFINAE_MAGIC>
 	inline typename ForwardList<T>::iterator ForwardList<T>::insert_after(const_iterator pos, InputIterator first, InputIterator last)
 	{
-		iterator ret(const_cast<ForwardListNode*>(pos.p));
+		iterator ret(pos);
 		while (first != last)
 			ret = emplace_after(ret, *first++);
 		return ret;
@@ -556,7 +563,7 @@ namespace DataStructures
 	template<typename ...Args>
 	inline typename ForwardList<T>::iterator ForwardList<T>::emplace_after(const_iterator pos, Args && ...args)
 	{
-		iterator _iter(const_cast<ForwardListNode*>(pos.p));
+		iterator _iter(pos);
 		return _iter.p->next = new ForwardListNode(_iter.p->next, std::forward<Args>(args) ...);
 		return _iter;
 	}
@@ -566,6 +573,82 @@ namespace DataStructures
 	inline typename ForwardList<T>::reference ForwardList<T>::emplace_front(Args && ...args)
 	{
 		return (head.next = new ForwardListNode(head.next, std::forward<Args>(args) ...))->value;
+	}
+
+	template<typename T>
+	template<typename Compare>
+	inline void ForwardList<T>::merge(ForwardList & other, Compare comp)
+	{
+		if (this == &other) return;
+		if (other.empty()) return;
+		if (empty())
+		{
+			swap(other);
+			return;
+		}
+
+		iterator next_this = begin();
+		iterator curr_this = next_this++;
+		iterator curr_other = other.before_begin();
+		iterator prev_other = curr_other++;
+
+		//After this step, comp(*curr_other, *curr_this) == false is guaranteed.
+		if (comp(*curr_other, *curr_this))
+		{
+			other.merge(*this, comp);
+			swap(other);
+			return;
+		}
+
+		while (next_this != end() && curr_other != other.end())
+		{
+			if (comp(*curr_other, *next_this))
+			{
+				++curr_other;
+				move_after(prev_other, curr_this);
+				++curr_this;
+			}
+			else
+			{
+				++curr_this;
+				++next_this;
+				continue;
+			}
+		}
+		while (curr_other != other.end())
+		{
+			++curr_other;
+			move_after(prev_other, curr_this);
+			++curr_this;
+		}
+	}
+
+	template<typename T>
+	template<typename Compare>
+	inline void ForwardList<T>::merge(ForwardList && other, Compare comp)
+	{
+		merge(other, comp);
+	}
+
+	template<typename T>
+	template<typename UnaryPredicate>
+	inline void ForwardList<T>::remove_if(UnaryPredicate p)
+	{
+		iterator curr = before_begin();
+		iterator prev = curr++;
+		while (curr != end())
+		{
+			if (p(*curr))
+			{
+				curr = erase_after(prev);
+				prev = curr++;
+			}
+			else
+			{
+				++curr;
+				++prev;
+			}
+		}
 	}
 
 	template<typename T>
@@ -596,6 +679,18 @@ namespace DataStructures
 	}
 
 	template<typename T>
+	inline void ForwardList<T>::merge(ForwardList & other)
+	{
+		merge(other, std::less<T>());
+	}
+
+	template<typename T>
+	inline void ForwardList<T>::merge(ForwardList && other)
+	{
+		merge(other, std::less<T>());
+	}
+
+	template<typename T>
 	inline typename ForwardList<T>::iterator ForwardList<T>::before_end() noexcept
 	{
 		iterator curr = before_begin();
@@ -618,5 +713,66 @@ namespace DataStructures
 		const_iterator curr = cbefore_begin();
 		while (curr.p->next != cend().p) ++curr;
 		return curr;
+	}
+
+	template<typename T>
+	inline void ForwardList<T>::move_after(iterator & from, iterator & to)
+	{
+		iterator temp(from.p->next->next);
+		from.p->next->next = to.p->next;
+		to.p->next = from.p->next;
+		from.p->next = temp.p;
+		//from and to still at original position
+	}
+
+	template<typename T>
+	inline void ForwardList<T>::splice_after(const_iterator pos, ForwardList & other)
+	{
+		if (this == &other) return;
+		splice_after(pos, other, other.before_begin());
+	}
+
+	template<typename T>
+	inline void ForwardList<T>::splice_after(const_iterator pos, ForwardList && other)
+	{
+		splice_after(pos, other);
+	}
+
+	template<typename T>
+	inline void ForwardList<T>::splice_after(const_iterator pos, ForwardList & other, const_iterator first)
+	{
+		if (pos == first || pos == ++(const_iterator(first))) return;
+		splice_after(pos, other, first, other.cend());
+	}
+
+	template<typename T>
+	inline void ForwardList<T>::splice_after(const_iterator pos, ForwardList && other, const_iterator first)
+	{
+		splice_after(pos, other, first);
+	}
+
+	template<typename T>
+	inline void ForwardList<T>::splice_after(const_iterator pos, ForwardList & other, const_iterator first, const_iterator last)
+	{
+		iterator _next(pos);
+		iterator _curr = _next++;
+		iterator _first(first);
+		iterator _last(last);
+		_curr.p->next = _first.p->next;
+		while (_curr.p->next != _last.p) ++_curr;
+		_curr.p->next = _next.p;
+		_first.p->next = _last.p;
+	}
+
+	template<typename T>
+	inline void ForwardList<T>::splice_after(const_iterator pos, ForwardList && other, const_iterator first, const_iterator last)
+	{
+		splice_after(pos, other, first, last);
+	}
+
+	template<typename T>
+	inline void ForwardList<T>::remove(const T & val)
+	{
+		remove_if([&val](const T& elem) { return std::equal_to<T>()(val, elem); });
 	}
 }

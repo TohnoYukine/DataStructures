@@ -63,10 +63,10 @@ int main()
 	//ConstructorTester();
 	//AssignmentTester();
 	//ElementAccessTester();
-	IteratorsTester();
+	//IteratorsTester();
 	//CapacityTester();
 	//ModifiersTester();
-	//OperationsTester();
+	OperationsTester();
 	//NonMemberFunctionsTester();
 
 	//Report all memory leaks
@@ -251,7 +251,34 @@ void ModifiersTester()
 
 void OperationsTester()
 {
+	//merge()
+	DS::ForwardList<int> ls1{ 1,3,5,7,9 };
+	DS::ForwardList<int> ls2{ 0,2,4,6,8 };
+	ls2.merge(ls1, [](int a, int b) {return a < b;});
+	ls2.merge({ -1,11 });
+	ls2.merge({ -1,11 }, std::less<int>());
 
+	//splice_after()
+	DS::ForwardList<int> ls3{ 1,2,3,4 };
+	DS::ForwardList<int> ls4{ 5,6,7,8 };
+	DS::ForwardList<int> ls5{ 9,0,1,2 };
+	ls3.splice_after(ls3.begin(), { 0,7 });
+	ls3.splice_after(ls3.before_end(), ls4, ls4.begin());
+	ls3.splice_after(++++ls3.begin(), ls5, ls5.begin(), ls5.before_end());
+
+	//remove() remove_if()
+	DS::ForwardList<int> ls6{ 1,2,3,1,1,4,5 };
+	DS::ForwardList<int> ls7{ 1,2,3,10,7,8,12,11 };
+	ls6.remove(1);
+	ls7.remove_if([](const int& i) {return i > 9;});
+
+	print(ls1);
+	print(ls2);
+	print(ls3);
+	print(ls4);
+	print(ls5);
+	print(ls6);
+	print(ls7);
 }
 
 /*
