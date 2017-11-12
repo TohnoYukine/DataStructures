@@ -16,12 +16,12 @@
 
 
 #include <iostream>
-#include <vector>
 #include <iomanip>
-#include <string>
-#include <forward_list>
 #include "ForwardList.h"
 #include "ForwardListTest.h"
+#include <string>
+#include <vector>
+#include <forward_list>
 
 using std::cin;
 using std::cout;
@@ -272,6 +272,16 @@ void OperationsTester()
 	ls6.remove(1);
 	ls7.remove_if([](const int& i) {return i > 9;});
 
+	//reverse()
+	DS::ForwardList<int> ls8{ 1,2,3,4 };
+	ls8.reverse();
+
+	//unique()
+	DS::ForwardList<int> ls9{ 1,2,3,4,4,4,4,5,6,7 };
+	DS::ForwardList<int> ls10{ 1,2,3,4,4,4,4,5,6,7 };
+	ls9.unique();
+	ls10.unique([](int a, int b) {return abs(a - b) < 2;});
+
 	print(ls1);
 	print(ls2);
 	print(ls3);
@@ -279,6 +289,9 @@ void OperationsTester()
 	print(ls5);
 	print(ls6);
 	print(ls7);
+	print(ls8);
+	print(ls9);
+	print(ls10);
 }
 
 /*

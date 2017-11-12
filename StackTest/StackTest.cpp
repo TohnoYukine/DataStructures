@@ -76,11 +76,11 @@ int main()
 	_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDOUT);
 
 	//Testers here
-	//ConstructorTester();
-	//AssignmentTester();
-	//ElementAccessTester();
-	//CapacityTester();
-	//ModifiersTester();
+	ConstructorTester();
+	AssignmentTester();
+	ElementAccessTester();
+	CapacityTester();
+	ModifiersTester();
 	NonMemberFunctionsTester();
 
 	//Report all memory leaks

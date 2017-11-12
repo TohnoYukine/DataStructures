@@ -146,6 +146,7 @@ namespace DataStructures
 	//Helper functions
 	private:
 		void move_after(iterator& from, iterator& to);	//Moves the node after "from" to after "to".
+		void move_front(iterator& from);				//No check for from
 
 	private:
 		struct ForwardListNode
@@ -652,6 +653,21 @@ namespace DataStructures
 	}
 
 	template<typename T>
+	template<typename BinaryPredicate>
+	inline void ForwardList<T>::unique(BinaryPredicate p)
+	{
+		if (empty()) return;
+		iterator curr = begin();
+		iterator prev = curr++;
+		while (curr != end())
+		{
+			if (p(*curr, *prev))
+				curr = erase_after(prev);
+			prev = curr++;
+		}
+	}
+
+	template<typename T>
 	inline void ForwardList<T>::swap(ForwardList<T>& other)
 	{
 		if (!empty() && !other.empty())
@@ -726,6 +742,15 @@ namespace DataStructures
 	}
 
 	template<typename T>
+	inline void ForwardList<T>::move_front(iterator & from)
+	{
+		iterator temp(from.p->next->next);
+		from.p->next->next = begin().p;
+		head.next = from.p->next;
+		from.p->next = temp.p;
+	}
+
+	template<typename T>
 	inline void ForwardList<T>::splice_after(const_iterator pos, ForwardList & other)
 	{
 		if (this == &other) return;
@@ -774,5 +799,20 @@ namespace DataStructures
 	inline void ForwardList<T>::remove(const T & val)
 	{
 		remove_if([&val](const T& elem) { return std::equal_to<T>()(val, elem); });
+	}
+
+	template<typename T>
+	inline void ForwardList<T>::reverse() noexcept
+	{
+		if (empty()) return;
+		iterator curr = begin();
+		while (curr.p->next != end().p)
+			move_front(curr);
+	}
+
+	template<typename T>
+	inline void ForwardList<T>::unique()
+	{
+		unique(std::equal_to<T>());
 	}
 }
