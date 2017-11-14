@@ -106,58 +106,66 @@ namespace DataStructures
 	private:
 		size_type reserved_size = 4;
 		size_type vector_size = 0;
-		T* storage = nullptr;
-		inline void reallocate();
-		inline void move_storage(T* dest, T* from, size_type n);
+		char* storage = nullptr;
+		inline void _reallocate();
+		inline void _move_storage(T* dest, T* from, size_type n);
+		inline void _allocate(size_type rsv_sz);	//malloc some storage and set reserved_size to rsv_sz
+		template <typename ... Args> inline void _construct(size_type pos, Args&& ... args);
+		template <typename ... Args> inline void _construct(iterator iter, Args&& ... args);
 	};
+#define Tstorage reinterpret_cast<T*>(storage)
 
 	/* Dividing Line (д├ бузе бу;)д├ (д├ бузе бу;)д├ (д├ бузе бу;)д├  */
 
 	template<typename T>
 	inline Vector<T>::Vector() noexcept
 	{
-		storage = new T[reserved_size];
+		_allocate(4);
 	}
 
 	template<typename T>
 	inline Vector<T>::Vector(size_type n)
 	{
-		vector_size = n;
-		reserved_size = n + n / 2 + 1;
-		storage = new T[reserved_size];
-		for (size_type i = 0; i < n; i++)
-			storage[i] = T();	//Is this necessary?
+		_allocate(n + n / 2 + 1);
+		while (vector_size < n)
+		{
+			_construct(vector_size);
+			++vector_size;
+		}
 	}
 
 	template<typename T>
 	inline Vector<T>::Vector(size_type n, const T & val)
 	{
-		vector_size = n;
-		reserved_size = n + n / 2 + 1;
-		storage = new T[reserved_size];
-		for (size_type i = 0; i < n; i++)
-			storage[i] = val;
+		_allocate(n + n / 2 + 1);
+		while (vector_size < n)
+		{
+			_construct(vector_size, val);
+			++vector_size;
+		}
 	}
 
 	template<typename T>
 	inline Vector<T>::Vector(std::initializer_list<T> init)
 	{
 		size_type count = init.size();
-		vector_size = 0;
-		reserved_size = count + count / 2 + 1;
-		storage = new T[reserved_size];
-		for (const T& elem : init)			//Why do I have to use const T& instead of T&
-			storage[vector_size++] = elem;	//Can I use std::move?
+		_allocate(count + count / 2 + 1);
+		for (const T& elem : init)
+		{
+			_construct(vector_size, elem);
+			++vector_size;
+		}
 	}
 
 	template<typename T>
 	inline Vector<T>::Vector(const Vector& origin)
 	{
-		vector_size = origin.vector_size;
-		reserved_size = origin.reserved_size;
-		storage = new T[reserved_size];
-		for (size_t i = 0; i < vector_size; i++)
-			storage[i] = origin.storage[i];
+		_allocate(origin.reserved_size);
+		while (vector_size < origin.vector_size)
+		{
+			_construct(vector_size, origin[vector_size]);
+			++vector_size;
+		}
 	}
 
 	template<typename T>
@@ -169,8 +177,8 @@ namespace DataStructures
 	template<typename T>
 	inline Vector<T>::~Vector()
 	{
-		if (storage != nullptr)
-			delete[] storage;
+		clear();
+		free(storage);
 	}
 
 	template<typename T>
@@ -210,13 +218,13 @@ namespace DataStructures
 	template<typename InputIterator, typename SFINAE_MAGIC>
 	inline Vector<T>::Vector(InputIterator first, InputIterator last)
 	{
-		size_type count = 0;
-		for (InputIterator curr = first; curr != last; ++curr) ++count;
-		vector_size = count;
-		reserved_size = count + count / 2 + 1;
-		storage = new T[reserved_size];
-		for (size_type i = 0; i < count; i++)
-			storage[i] = *first++;
+		size_type count = std::distance(first, last);
+		_allocate(count + count / 2 + 1);
+		while (vector_size < count)
+		{
+			_construct(vector_size, *first++);
+			++vector_size;
+		}
 	}
 
 	template<typename T>
@@ -229,13 +237,13 @@ namespace DataStructures
 	template<typename T>
 	inline typename Vector<T>::iterator Vector<T>::begin() noexcept
 	{
-		return storage;
+		return Tstorage;
 	}
 
 	template<typename T>
 	inline typename Vector<T>::const_iterator Vector<T>::begin() const noexcept
 	{
-		return storage;
+		return Tstorage;
 	}
 
 	template<typename T>
@@ -247,13 +255,13 @@ namespace DataStructures
 	template<typename T>
 	inline typename Vector<T>::iterator Vector<T>::end() noexcept
 	{
-		return storage + vector_size;
+		return Tstorage + vector_size;
 	}
 
 	template<typename T>
 	inline typename Vector<T>::const_iterator Vector<T>::end() const noexcept
 	{
-		return storage + vector_size;
+		return Tstorage + vector_size;
 	}
 
 	template<typename T>
@@ -265,13 +273,13 @@ namespace DataStructures
 	template<typename T>
 	inline typename Vector<T>::reverse_iterator Vector<T>::rbegin() noexcept
 	{
-		return reverse_iterator(storage + vector_size);
+		return reverse_iterator(Tstorage + vector_size);
 	}
 
 	template<typename T>
 	inline typename Vector<T>::const_reverse_iterator Vector<T>::rbegin() const noexcept
 	{
-		return reverse_iterator(storage + vector_size);
+		return reverse_iterator(Tstorage + vector_size);
 	}
 
 	template<typename T>
@@ -283,13 +291,13 @@ namespace DataStructures
 	template<typename T>
 	inline typename Vector<T>::reverse_iterator Vector<T>::rend() noexcept
 	{
-		return reverse_iterator(storage);
+		return reverse_iterator(Tstorage);
 	}
 
 	template<typename T>
 	inline typename Vector<T>::const_reverse_iterator Vector<T>::rend() const noexcept
 	{
-		return reverse_iterator(storage);
+		return reverse_iterator(Tstorage);
 	}
 
 	template<typename T>
@@ -330,13 +338,13 @@ namespace DataStructures
 			if (n > reserved_size)
 			{
 				reserved_size = n;
-				reallocate();
+				_reallocate();
 			}
 		}
 		else
 		{
 			for (size_t i = n; i < vector_size; i++)
-				storage[i].~T();
+				Tstorage[i].~T();
 		}
 		vector_size = n;
 	}
@@ -349,15 +357,17 @@ namespace DataStructures
 			if (n > reserved_size)
 			{
 				reserved_size = n + n / 2 + 1;
-				reallocate();
+				_reallocate();
 			}
 			for (size_t i = vector_size; i < n; i++)
-				storage[i] = val;
+			{
+				_construct(i, val);
+			}
 		}
 		else
 		{
 			for (size_t i = n; i < vector_size; i++)
-				storage[i].~T();
+				Tstorage[i].~T();
 		}
 		vector_size = n;
 	}
@@ -368,7 +378,7 @@ namespace DataStructures
 		if (n > reserved_size)
 		{
 			reserved_size = n;
-			reallocate();
+			_reallocate();
 		}
 	}
 
@@ -376,26 +386,26 @@ namespace DataStructures
 	inline void Vector<T>::shrink_to_fit()
 	{
 		reserved_size = vector_size;
-		reallocate();
+		_reallocate();
 	}
 
 	template<typename T>
 	inline typename Vector<T>::reference Vector<T>::operator[](size_type index)
 	{
-		return storage[index];
+		return Tstorage[index];
 	}
 
 	template<typename T>
 	inline typename Vector<T>::const_reference Vector<T>::operator[](size_type index) const
 	{
-		return storage[index];
+		return Tstorage[index];
 	}
 
 	template<typename T>
 	inline typename Vector<T>::reference Vector<T>::at(size_type pos)
 	{
 		if (pos < vector_size)
-			return storage[pos];
+			return Tstorage[pos];
 		throw std::out_of_range{ "Accessed position is out of range!" };
 	}
 
@@ -403,44 +413,44 @@ namespace DataStructures
 	inline typename Vector<T>::const_reference Vector<T>::at(size_type pos) const
 	{
 		if (pos < vector_size)
-			return storage[pos];
+			return Tstorage[pos];
 		throw std::out_of_range{ "Accessed position is out of range!" };
 	}
 
 	template<typename T>
 	inline typename Vector<T>::reference Vector<T>::front()
 	{
-		return storage[0];
+		return Tstorage[0];
 	}
 
 	template<typename T>
 	inline typename Vector<T>::const_reference Vector<T>::front() const
 	{
-		return storage[0];
+		return Tstorage[0];
 	}
 
 	template<typename T>
 	inline typename Vector<T>::reference Vector<T>::back()
 	{
-		return storage[vector_size - 1];
+		return Tstorage[vector_size - 1];
 	}
 
 	template<typename T>
 	inline typename Vector<T>::const_reference Vector<T>::back() const
 	{
-		return storage[vector_size - 1];
+		return Tstorage[vector_size - 1];
 	}
 
 	template<typename T>
 	inline T * Vector<T>::data() noexcept
 	{
-		return storage;
+		return Tstorage;
 	}
 
 	template<typename T>
 	inline const T * Vector<T>::data() const noexcept
 	{
-		return storage;
+		return Tstorage;
 	}
 
 	template<typename T>
@@ -450,9 +460,24 @@ namespace DataStructures
 		if (vector_size == reserved_size)
 		{
 			reserved_size += reserved_size / 2 + 1;
-			reallocate();
+			_reallocate();
 		}
-		return storage[vector_size++] = std::move(T(std::forward<Args>(args) ...));
+		_construct(vector_size, std::forward<Args>(args) ...);
+		return Tstorage[vector_size++];
+	}
+
+	template<typename T>
+	template<typename ...Args>
+	inline typename void Vector<T>::_construct(size_type pos, Args && ...args)
+	{
+		new(Tstorage + pos) T(std::forward<Args>(args) ...);
+	}
+
+	template<typename T>
+	template<typename ...Args>
+	inline void Vector<T>::_construct(iterator iter, Args && ...args)
+	{
+		new(iter) T(std::forward<Args>(args) ...);
 	}
 
 	template<typename T>
@@ -464,31 +489,30 @@ namespace DataStructures
 	template<typename T>
 	inline void Vector<T>::push_back(T &&rval)
 	{
-		emplace_back(std::forward<T>(rval));	//Is this okay?
+		emplace_back(rval);	//Is this okay?
 	}
 
 	template<typename T>
 	inline void Vector<T>::pop_back()
 	{
-		storage[--vector_size].~T();
+		Tstorage[--vector_size].~T();
 	}
 
 	template<typename T>
 	template<typename ...Args>
 	inline typename Vector<T>::iterator Vector<T>::emplace(const_iterator iter, Args && ...args)
 	{
-		size_type pos = iter - storage;
-		iterator _iter = &storage[pos];	//Check for range validity
+		size_type pos = iter - Tstorage;
+		iterator _iter = &Tstorage[pos];	//Check for range validity
 		if (vector_size == reserved_size)
 		{
 			reserved_size += reserved_size / 2 + 1;
-			reallocate();
+			_reallocate();
 		}
-		_iter = &storage[pos];
-		//memmove(_iter + 1, _iter, (vector_size - (_iter - storage)) * sizeof(T));
-		move_storage(_iter + 1, _iter, vector_size - (_iter - storage));
+		_iter = &Tstorage[pos];
+		_move_storage(_iter + 1, _iter, vector_size - (_iter - Tstorage));
 		++vector_size;
-		*_iter = std::move(T(std::forward<Args>(args) ...));
+		new(_iter) T(std::forward<Args>(args) ...);
 		return _iter;
 	}
 
@@ -501,82 +525,77 @@ namespace DataStructures
 	template<typename T>
 	inline typename Vector<T>::iterator Vector<T>::insert(const_iterator iter, T&& rval)
 	{
-		return emplace(iter, std::forward<T>(rval));
+		return emplace(iter, rval);
 	}
 
 	template<typename T>
 	inline typename Vector<T>::iterator Vector<T>::insert(const_iterator iter, size_type n, T &val)
 	{
-		size_type pos = iter - storage;
-		iterator _iter = &storage[pos];
+		size_type pos = iter - Tstorage;
+		iterator _iter = &Tstorage[pos];
 		if (n == 0) return _iter;
 		if (vector_size + n > reserved_size)
 		{
 			reserved_size += n;
-			reallocate();
+			_reallocate();
 		}
-		_iter = &storage[pos];
-		//memmove(_iter + n, _iter, (vector_size - (_iter - storage)) * sizeof(T));
-		move_storage(_iter + n, _iter, vector_size - (_iter - storage));
+		_iter = &Tstorage[pos];
+		_move_storage(_iter + n, _iter, vector_size - (_iter - Tstorage));
 		vector_size += n;
 		for (size_t i = 0; i < n; i++)
-			*iter++ = val;
-		return &storage[pos];
+			_construct(iter++, val);
+		return &Tstorage[pos];
 	}
 
 	template<typename T>
 	inline typename Vector<T>::iterator Vector<T>::insert(const_iterator iter, std::initializer_list<T> init)
 	{
-		size_type pos = iter - storage;
-		iterator _iter = &storage[pos];
+		size_type pos = iter - Tstorage;
+		iterator _iter = &Tstorage[pos];
 		size_type n = init.size();
 		if (n == 0) return _iter;
 		if (vector_size + n > reserved_size)
 		{
 			reserved_size += n;
-			reallocate();
+			_reallocate();
 		}
-		_iter = &storage[pos];
-		//memmove(_iter + n, _iter, (vector_size - (_iter - storage)) * sizeof(T));
-		move_storage(_iter + n, _iter, vector_size - (_iter - storage));
+		_iter = &Tstorage[pos];
+		_move_storage(_iter + n, _iter, vector_size - (_iter - Tstorage));
 		vector_size += n;
 		for (const T& elem : init)
-			*_iter++ = elem;
-		return &storage[pos];
+			_construct(_iter++, elem);
+		return &Tstorage[pos];
 	}
 
 	template<typename T>
 	template<typename InputIterator>
 	inline typename Vector<T>::iterator Vector<T>::insert(const_iterator iter, InputIterator first, InputIterator last)
 	{
-		size_type pos = iter - storage;
-		iterator _iter = &storage[pos];
+		size_type pos = iter - Tstorage;
+		iterator _iter = &Tstorage[pos];
 
-		size_type n = 0;
-		for (InputIterator curr = first; curr != last; ++curr) ++n;
+		size_type n = std::distance(first, last);
 
 		if (n == 0) return _iter;
 		if (vector_size + n > reserved_size)
 		{
 			reserved_size += n;
-			reallocate();
+			_reallocate();
 		}
-		_iter = &storage[pos];	//Must refresh _iter after reallocation
-		//memmove(_iter + n, _iter, (vector_size - (_iter - storage)) * sizeof(T));
-		move_storage(_iter + n, _iter, vector_size - (_iter - storage));
+		_iter = &Tstorage[pos];	//Must refresh _iter after reallocation
+		_move_storage(_iter + n, _iter, vector_size - (_iter - Tstorage));
 		vector_size += n;
 		for (size_t i = 0; i < n; i++)
-			*_iter++ = *first++;
-		return &storage[pos];
+			_construct(_iter++, *first++);
+		return &Tstorage[pos];
 	}
 
 	template<typename T>
 	inline typename Vector<T>::iterator Vector<T>::erase(const_iterator iter)
 	{
-		iterator _iter = &storage[iter - storage];
+		iterator _iter = &Tstorage[iter - Tstorage];
 		_iter->~T();
-		//memmove(_iter, _iter + 1, (vector_size - (_iter - storage)) * sizeof(T));
-		move_storage(_iter, _iter + 1, vector_size - (_iter - storage));
+		_move_storage(_iter, _iter + 1, vector_size - (_iter - Tstorage));
 		vector_size -= 1;
 		return _iter;
 	}
@@ -585,13 +604,12 @@ namespace DataStructures
 	inline typename Vector<T>::iterator Vector<T>::erase(const_iterator first, const_iterator last)
 	{
 		size_type n = last - first;
-		iterator _iter = &storage[first - storage];
+		iterator _iter = &Tstorage[first - Tstorage];
 		iterator _last = _iter + n;
 		if (n == 0) return _iter;
 		for (size_t i = 0; i < n; i++)
 			first++->~T();
-		//memmove(_iter, last, (vector_size - (last - storage)) * sizeof(T));
-		move_storage(_iter, _last, vector_size - (_last - storage));
+		_move_storage(_iter, _last, vector_size - (_last - Tstorage));
 		vector_size -= n;
 		return _iter;
 	}
@@ -599,17 +617,17 @@ namespace DataStructures
 	template<typename T>
 	inline void Vector<T>::swap(Vector<T>& rhs)
 	{
-		std::swap(vector_size, rhs.vector_size);
-		std::swap(reserved_size, rhs.reserved_size);
-		std::swap(storage, rhs.storage);
+		using std::swap;
+		swap(vector_size, rhs.vector_size);
+		swap(reserved_size, rhs.reserved_size);
+		swap(storage, rhs.storage);
 	}
 
 	template<typename T>
 	inline void Vector<T>::clear() noexcept
 	{
-		vector_size = 0;
 		for (size_t i = 0; i < vector_size; i++)
-			storage[i].~T();
+			Tstorage[i].~T();
 	}
 
 	template<typename T>
@@ -618,7 +636,7 @@ namespace DataStructures
 		if (lhs.vector_size != rhs.vector_size)
 			return false;
 		for (size_t i = 0; i < lhs.vector_size; i++)
-			if (lhs.storage[i] != rhs.storage[i])
+			if (lhs[i] != rhs[i])
 				return false;
 		return true;
 	}
@@ -634,8 +652,8 @@ namespace DataStructures
 	{
 		typename Vector<T>::size_type n = (lhs.vector_size < rhs.vector_size) ? lhs.vector_size : rhs.vector_size;
 		for (size_t i = 0; i < n; i++)
-			if (lhs.storage[i] != rhs.storage[i])
-				return lhs.storage[i] < rhs.storage[i];
+			if (lhs[i] != rhs[i])
+				return lhs[i] < rhs[i];
 		return lhs.vector_size < rhs.vector_size;
 	}
 
@@ -644,8 +662,8 @@ namespace DataStructures
 	{
 		typename Vector<T>::size_type n = lhs.vector_size < rhs.vector_size ? lhs.vector_size : rhs.vector_size;
 		for (size_t i = 0; i < n; i++)
-			if (lhs.storage[i] != rhs.storage[i])
-				return lhs.storage[i] > rhs.storage[i];
+			if (lhs[i] != rhs[i])
+				return lhs[i] > rhs[i];
 		return lhs.vector_size > rhs.vector_size;
 	}
 
@@ -668,17 +686,13 @@ namespace DataStructures
 	}
 
 	template<typename T>
-	inline void Vector<T>::reallocate()
+	inline void Vector<T>::_reallocate()
 	{
-		T* new_storage = new T[reserved_size];
-		//memcpy(new_storage, storage, vector_size * sizeof(T));
-		move_storage(new_storage, storage, vector_size);
-		delete[] storage;
-		storage = new_storage;
+		storage = reinterpret_cast<char*>(realloc(storage, reserved_size * sizeof(T)));
 	}
 
 	template<typename T>
-	inline void Vector<T>::move_storage(T * dest, T * from, size_type n)
+	inline void Vector<T>::_move_storage(T * dest, T * from, size_type n)
 	{
 		if (dest < from)
 		{
@@ -694,5 +708,12 @@ namespace DataStructures
 		}
 		else
 			return;
+	}
+
+	template<typename T>
+	inline void Vector<T>::_allocate(size_type rsv_sz)
+	{
+		reserved_size = rsv_sz;
+		storage = reinterpret_cast<char*>(malloc(sizeof(T)*reserved_size));
 	}
 }

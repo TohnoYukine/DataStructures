@@ -132,6 +132,7 @@
   <ItemGroup>
     <ClInclude Include="ForwardList.h" />
     <ClInclude Include="Stack.h" />
+    <ClInclude Include="BasicString.h" />
     <ClInclude Include="Vector.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
