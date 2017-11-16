@@ -32,7 +32,7 @@ namespace DataStructures
 		//Constructor, Destructor and Assignment
 		explicit BasicString() noexcept;
 		explicit BasicString(size_type n, const CharT& val);
-		BasicString(const BasicString& other, size_type pos, size_type n);
+		BasicString(const BasicString& other, size_type pos, size_type n = npos);
 		BasicString(const CharT* s, size_type n);
 		BasicString(const CharT* s);
 		template<typename InputIterator, typename = typename std::enable_if_t<std::_Is_iterator<InputIterator>::value>>
@@ -159,8 +159,8 @@ namespace DataStructures
 		size_type copy(CharT* dest, size_type n, size_type pos = 0) const;
 
 		void resize(size_type n);					//Fill with default initialized element
-		void resize(size_type n, CharT ch);	//Fill with val
-		void swap(BasicString<CharT>& other) noexcept;
+		void resize(size_type n, CharT ch);			//Fill with val
+		void swap(BasicString& other) noexcept;
 
 		//Search
 		size_type find(const BasicString& str, size_type pos = 0) const;
@@ -303,13 +303,300 @@ namespace DataStructures
 		//hash(const String&)
 
 	private:
-		size_type reserved_size = 4;
+		size_type reserved_size = 1;
 		size_type length = 0;
 		char* storage = nullptr;
-		inline void reallocate();
-		inline void move_storage(T* dest, T* from, size_type n);
+
+		inline void _reallocate(size_type rsv_sz);
+		inline void _move_storage(CharT* dest, CharT* from, size_type n);
+		inline void _allocate(size_type rsv_sz);	//malloc some storage and set reserved_size to rsv_sz
+		template <typename ... Args> inline void _construct(size_type pos, Args&& ... args);
+		template <typename ... Args> inline void _construct(iterator iter, Args&& ... args);
 	};
 
 	/* Dividing Line (д├ бузе бу;)д├ (д├ бузе бу;)д├ (д├ бузе бу;)д├  */
+	#define Tstorage reinterpret_cast<CharT*>(storage)
+	#define Tsize sizeof(T)
 
+	template<typename CharT, typename Traits>
+	inline void BasicString<CharT, Traits>::_reallocate(size_type rsv_sz)
+	{
+		reserved_size = rsv_sz;
+		storage = reinterpret_cast<char*>(realloc(storage, reserved_size * Tsize));
+	}
+
+	template<typename CharT, typename Traits>
+	inline void BasicString<CharT, Traits>::_move_storage(CharT * dest, CharT * from, size_type n)
+	{
+		if (dest < from)
+		{
+			CharT *_dest = dest, *_from = from;
+			for (size_t i = 0; i < n; i++)
+				*_dest++ = std::move(*_from++);
+		}
+		else if (dest > from)
+		{
+			CharT *_dest = dest + n - 1, *_from = from + n - 1;
+			for (size_t i = n; i > 0; i--)
+				*_dest-- = std::move(*_from--);
+		}
+		else
+			return;
+	}
+
+	template<typename CharT, typename Traits>
+	inline void BasicString<CharT, Traits>::_allocate(size_type rsv_sz)
+	{
+		reserved_size = rsv_sz;
+		storage = reinterpret_cast<char*>(malloc(Tsize*reserved_size));
+	}
+
+	template<typename CharT, typename Traits>
+	template<typename ...Args>
+	inline void BasicString<CharT, Traits>::_construct(size_type pos, Args && ...args)
+	{
+		new(Tstorage + pos) CharT(std::forward<Args>(args) ...);
+	}
+
+	template<typename CharT, typename Traits>
+	template<typename ...Args>
+	inline void BasicString<CharT, Traits>::_construct(iterator iter, Args && ...args)
+	{
+		new(iter) CharT(std::forward<Args>(args) ...);
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits>::BasicString() noexcept : length(0)
+	{
+		_allocate(1);
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits>::BasicString(size_type n, const CharT & val) : length(0)
+	{
+		_allocate(n);
+		while (length < n)
+		{
+			//_construct(length++, val);	//In case of construction failure
+			_construct(length, val);
+			++length;
+		}
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits>::BasicString(const BasicString & other, size_type pos, size_type n) : length(0)
+	{
+		if (n == npos)
+		{
+			size_type cnt = other.size() - pos;
+			_allocate(cnt);
+			memcpy(storage, other.storage + pos * Tsize, cnt * Tsize);
+			length = cnt;
+		}
+		else if (pos + n <= origin.size())
+		{
+			_allocate(n);
+			memcpy(storage, other.storage + pos * Tsize, n * Tsize);
+			length = n;
+		}
+		else
+		{
+			throw std::out_of_range{ "Assigned range exceed end of source string." };
+		}
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits>::BasicString(const CharT * s, size_type n) : length(0)
+	{
+		_allocate(n);
+		memcpy(storage, s, n * Tsize);
+		length = n;
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits>::BasicString(const CharT * s) : length(0)
+	{
+		size_type n = sizeof(s) / Tsize;
+		_allocate(n);
+		memcpy(storage, s, sizeof(s));
+		length = n;
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits>::BasicString(std::initializer_list<CharT> init) : length(0)
+	{
+		size_type n = init.size();
+		_allocate(n);
+		for (const CharT& elem : init)
+		{
+			_construct(Tstorage)
+		}
+		length = n;
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits>::BasicString(const BasicString & origin) : length(0)
+	{
+		_allocate(origin.length);
+		memcpy(storage, origin.storage, Tsize * origin.length);
+		length = origin.length;
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits>::BasicString(BasicString && origin) noexcept
+	{
+		swap(origin);
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits>::~BasicString()
+	{
+		clear();
+		free(storage);
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits> & BasicString<CharT, Traits>::operator=(const BasicString & origin)
+	{
+		return assign(origin);
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits> & BasicString<CharT, Traits>::operator=(BasicString && origin)
+	{
+		return assign(std::move(origin));
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits> & BasicString<CharT, Traits>::operator=(const CharT * s)
+	{
+		return assign(s);
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits> & BasicString<CharT, Traits>::operator=(CharT ch)
+	{
+		return assign(1, ch);
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits> & BasicString<CharT, Traits>::operator=(std::initializer_list<CharT> init)
+	{
+		return assign(init);
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits> & BasicString<CharT, Traits>::assign(size_type n, CharT ch)
+	{
+		swap(BasicString(n, ch));
+		return *this;
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits> & BasicString<CharT, Traits>::assign(const BasicString & origin)
+	{
+		swap(BasicString(origin));
+		return *this;
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits> & BasicString<CharT, Traits>::assign(const BasicString & origin, size_type pos, size_type n)
+	{
+		swap(BasicString(origin, pos, n));
+		return *this;
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits> & BasicString<CharT, Traits>::assign(BasicString && origin)
+	{
+		swap(origin);
+		return *this;
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits> & BasicString<CharT, Traits>::assign(const CharT * s, size_type n)
+	{
+		swap(BasicString(s, n));
+		return *this;
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits> & BasicString<CharT, Traits>::assign(const CharT * s)
+	{
+		swap(BasicString(s));
+		return *this;
+	}
+
+	template<typename CharT, typename Traits>
+	inline BasicString<CharT, Traits> & BasicString<CharT, Traits>::assign(std::initializer_list<CharT> init)
+	{
+		swap(BasicString(init));
+		return *this;
+	}
+
+	template<typename CharT, typename Traits>
+	template<typename InputIterator, typename SFINAE_MAGIC>
+	inline BasicString<CharT, Traits>::BasicString(InputIterator first, InputIterator last) : length(0)
+	{
+		size_type n = std::distance(first, last);
+		_allocate(n);
+		for (size_t i = 0; i < n; i++)
+		{
+			_construct(Tstorage + i, *first++);
+		}
+		length = n;
+	}
+
+	template<typename CharT, typename Traits>
+	template<typename InputIterator, >
+	inline BasicString<CharT, Traits> & BasicString<CharT, Traits>::assign(InputIterator first, InputIterator last)
+	{
+		swap(BasicString(first, last));
+		return *this;
+	}
+
+	template<typename CharT, typename Traits>
+	inline void BasicString<CharT, Traits>::swap(BasicString & other) noexcept
+	{
+		using std::swap;
+		swap(storage, origin.storage);
+		swap(reserved_size, origin.reserved_size);
+		swap(length, origin.length);
+	}
+
+	template<typename CharT, typename Traits>
+	inline void BasicString<CharT, Traits>::clear() noexcept
+	{
+		for (size_t i = 0; i < length; i++)
+		{
+			Tstorage[i].~CharT();
+		}
+	}
+
+	template<typename CharT, typename Traits>
+	inline reference BasicString<CharT, Traits>::at(size_type index)
+	{
+		if (index < length)
+			return Tstorage[index];
+		throw std::out_of_range{ "Accessed position is out of range!" };
+	}
+	template<typename CharT, typename Traits>
+	inline const_reference BasicString<CharT, Traits>::at(size_type index) const
+	{
+		if (index < length)
+			return Tstorage[index];
+		throw std::out_of_range{ "Accessed position is out of range!" };
+	}
+	template<typename CharT, typename Traits>
+	inline reference BasicString<CharT, Traits>::operator[](size_type index)
+	{
+		return Tstorage[index];
+	}
+	template<typename CharT, typename Traits>
+	inline const_reference BasicString<CharT, Traits>::operator[](size_type index) const
+	{
+		return Tstorage[index];
+	}
 }
+	#undef Tstorage
+	#undef Tsize
