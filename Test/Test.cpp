@@ -27,8 +27,11 @@ int main()
 	//std::forward_list<int> ls{ 1,2,3 };
 	//auto iter = ++++ls.begin();
 	//ls.erase_after(iter);
-	std::set<int, bool(*)(const int&, const int&)> m_songs({ 2,3,4,5,1,6 }, [](const int& a, const int& b) {return a > b;});
-	std::cout << *++m_songs.find(3) << '\n';
-	print(m_songs.begin(), m_songs.end());
+	//std::set<int, bool(*)(const int&, const int&)> m_songs({ 2,3,4,5,1,6 }, [](const int& a, const int& b) {return a > b;});
+	//std::cout << *++m_songs.find(3) << '\n';
+	//print(m_songs.begin(), m_songs.end());
+	char a[100];
+	scanf("%s", &a);
+	printf("%s", a);
 	return 0;
 }

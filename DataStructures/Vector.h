@@ -1,7 +1,7 @@
 #pragma once
 #include <stdexcept>
 
-#define MAX_VECTOR_SIZE 1073741824U		//1GB
+#define MAX_VECTOR_SIZE -1U
 
 namespace DataStructures
 {

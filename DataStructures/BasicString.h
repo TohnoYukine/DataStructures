@@ -2,17 +2,18 @@
 #include <stdexcept>
 #include <string>
 
-#define MAX_STRING_SIZE 1073741824U		//1GB
+#define MAX_STRING_SIZE -1U
 
 namespace DataStructures
 {
-	template<typename CharT = char, typename Traits = std::char_traits<CharT>>
+	template<typename CharT = char, typename Traits = std::char_traits<CharT>> class BasicString;
+	using String = BasicString<char>;
+	using WString = BasicString<wchar_t>;
+
+	template<typename CharT, typename Traits>
 	class BasicString
 	{
 	public:
-		using String = BasicString<char>;
-		using WString = BasicString<wchar_t>;
-
 		using traits_type = Traits;
 		using value_type = CharT;
 		using size_type = size_t;
@@ -27,7 +28,7 @@ namespace DataStructures
 		using reverse_iterator = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-		static const size_type npos = -1U;
+		static const size_type npos = -1;
 
 		//Constructor, Destructor and Assignment
 		explicit BasicString() noexcept;
@@ -196,29 +197,29 @@ namespace DataStructures
 
 		//Non-Member Functions
 		template<typename CharT, typename Traits>
-		BasicString<CharT, Traits> operator+(const BasicString<CharT, Traits>& lhs, const BasicString<CharT, Traits>& rhs);
+		friend BasicString<CharT, Traits> operator+(const BasicString<CharT, Traits>& lhs, const BasicString<CharT, Traits>& rhs);
 		template<typename CharT, typename Traits>
-		BasicString<CharT, Traits> operator+(const CharT* lhs, const BasicString<CharT, Traits>& rhs);
+		friend BasicString<CharT, Traits> operator+(const CharT* lhs, const BasicString<CharT, Traits>& rhs);
 		template<typename CharT, typename Traits>
-		BasicString<CharT, Traits> operator+(CharT lhs, const BasicString<CharT, Traits>& rhs);
+		friend BasicString<CharT, Traits> operator+(CharT lhs, const BasicString<CharT, Traits>& rhs);
 		template<typename CharT, typename Traits>
-		BasicString<CharT, Traits> operator+(const BasicString<CharT, Traits>& lhs, const CharT* rhs);
+		friend BasicString<CharT, Traits> operator+(const BasicString<CharT, Traits>& lhs, const CharT* rhs);
 		template<typename CharT, typename Traits>
-		BasicString<CharT, Traits> operator+(const BasicString<CharT, Traits>& lhs, CharT rhs);
+		friend BasicString<CharT, Traits> operator+(const BasicString<CharT, Traits>& lhs, CharT rhs);
 		template<typename CharT, typename Traits>
-		BasicString<CharT, Traits> operator+(BasicString<CharT, Traits>&& lhs, const BasicString<CharT, Traits>& rhs);
+		friend BasicString<CharT, Traits> operator+(BasicString<CharT, Traits>&& lhs, const BasicString<CharT, Traits>& rhs);
 		template<typename CharT, typename Traits>
-		BasicString<CharT, Traits> operator+(const BasicString<CharT, Traits>& lhs, BasicString<CharT, Traits>&& rhs);
+		friend BasicString<CharT, Traits> operator+(const BasicString<CharT, Traits>& lhs, BasicString<CharT, Traits>&& rhs);
 		template<typename CharT, typename Traits>
-		BasicString<CharT, Traits> operator+(BasicString<CharT, Traits>&& lhs, BasicString<CharT, Traits>&& rhs);
+		friend BasicString<CharT, Traits> operator+(BasicString<CharT, Traits>&& lhs, BasicString<CharT, Traits>&& rhs);
 		template<typename CharT, typename Traits>
-		BasicString<CharT, Traits> operator+(const CharT* lhs, BasicString<CharT, Traits>&& rhs);
+		friend BasicString<CharT, Traits> operator+(const CharT* lhs, BasicString<CharT, Traits>&& rhs);
 		template<typename CharT, typename Traits>
-		BasicString<CharT, Traits> operator+(CharT lhs, BasicString<CharT, Traits>&& rhs);
+		friend BasicString<CharT, Traits> operator+(CharT lhs, BasicString<CharT, Traits>&& rhs);
 		template<typename CharT, typename Traits>
-		BasicString<CharT, Traits> operator+(BasicString<CharT, Traits>&& lhs, const CharT* rhs);
+		friend BasicString<CharT, Traits> operator+(BasicString<CharT, Traits>&& lhs, const CharT* rhs);
 		template<typename CharT, typename Traits>
-		BasicString<CharT, Traits> operator+(BasicString<CharT, Traits>&& lhs, CharT rhs);
+		friend BasicString<CharT, Traits> operator+(BasicString<CharT, Traits>&& lhs, CharT rhs);
 
 		template<typename CharT, typename Traits> friend bool operator==(const BasicString<CharT, Traits>& lhs, const BasicString<CharT, Traits>& rhs);
 		template<typename CharT, typename Traits> friend bool operator!=(const BasicString<CharT, Traits>& lhs, const BasicString<CharT, Traits>& rhs);
@@ -257,24 +258,24 @@ namespace DataStructures
 		std::basic_istream<CharT, Traits>& getline(std::basic_istream<CharT, Traits>&& input, BasicString<CharT, Traits>& str);
 
 		//Numeric conversions
-		friend int       stoi(const String& str, std::size_t* pos = 0, int base = 10);
-		friend int       stoi(const WString& str, std::size_t* pos = 0, int base = 10);
-		friend long      stol(const String& str, std::size_t* pos = 0, int base = 10);
-		friend long      stol(const WString& str, std::size_t* pos = 0, int base = 10);
-		friend long long stoll(const String& str, std::size_t* pos = 0, int base = 10);
-		friend long long stoll(const WString& str, std::size_t* pos = 0, int base = 10);
+		friend int       stoi(const String& str, std::size_t* pos, int base);
+		friend int       stoi(const WString& str, std::size_t* pos, int base);
+		friend long      stol(const String& str, std::size_t* pos, int base);
+		friend long      stol(const WString& str, std::size_t* pos, int base);
+		friend long long stoll(const String& str, std::size_t* pos, int base);
+		friend long long stoll(const WString& str, std::size_t* pos, int base);
 
-		friend unsigned long      stoul(const String& str, std::size_t* pos = 0, int base = 10);
-		friend unsigned long      stoul(const WString& str, std::size_t* pos = 0, int base = 10);
-		friend unsigned long long stoull(const String& str, std::size_t* pos = 0, int base = 10);
-		friend unsigned long long stoull(const String& str, std::size_t* pos = 0, int base = 10);
+		friend unsigned long      stoul(const String& str, std::size_t* pos, int base);
+		friend unsigned long      stoul(const WString& str, std::size_t* pos, int base);
+		friend unsigned long long stoull(const String& str, std::size_t* pos, int base);
+		friend unsigned long long stoull(const WString& str, std::size_t* pos, int base);
 
-		friend float       stof(const String& str, std::size_t* pos = 0);
-		friend float       stof(const WString& str, std::size_t* pos = 0);
-		friend double      stod(const String& str, std::size_t* pos = 0);
-		friend double      stod(const WString& str, std::size_t* pos = 0);
-		friend long double stold(const String& str, std::size_t* pos = 0);
-		friend long double stold(const WString& str, std::size_t* pos = 0);
+		friend float       stof(const String& str, std::size_t* pos);
+		friend float       stof(const WString& str, std::size_t* pos);
+		friend double      stod(const String& str, std::size_t* pos);
+		friend double      stod(const WString& str, std::size_t* pos);
+		friend long double stold(const String& str, std::size_t* pos);
+		friend long double stold(const WString& str, std::size_t* pos);
 
 		friend String to_string(int value);
 		friend String to_string(long value);
@@ -304,7 +305,7 @@ namespace DataStructures
 
 	private:
 		size_type reserved_size = 1;
-		size_type length = 0;
+		size_type string_length = 0;
 		char* storage = nullptr;
 
 		inline void _reallocate(size_type rsv_sz);
@@ -312,17 +313,18 @@ namespace DataStructures
 		inline void _allocate(size_type rsv_sz);	//malloc some storage and set reserved_size to rsv_sz
 		template <typename ... Args> inline void _construct(size_type pos, Args&& ... args);
 		template <typename ... Args> inline void _construct(iterator iter, Args&& ... args);
+		inline void _add_null_char(size_type pos);
 	};
 
 	/* Dividing Line (д├ бузе бу;)д├ (д├ бузе бу;)д├ (д├ бузе бу;)д├  */
 	#define Tstorage reinterpret_cast<CharT*>(storage)
-	#define Tsize sizeof(T)
+	#define Tsize sizeof(CharT)
 
 	template<typename CharT, typename Traits>
 	inline void BasicString<CharT, Traits>::_reallocate(size_type rsv_sz)
 	{
 		reserved_size = rsv_sz;
-		storage = reinterpret_cast<char*>(realloc(storage, reserved_size * Tsize));
+		storage = reinterpret_cast<char*>(realloc(storage, (reserved_size + 1) * Tsize));
 	}
 
 	template<typename CharT, typename Traits>
@@ -348,7 +350,13 @@ namespace DataStructures
 	inline void BasicString<CharT, Traits>::_allocate(size_type rsv_sz)
 	{
 		reserved_size = rsv_sz;
-		storage = reinterpret_cast<char*>(malloc(Tsize*reserved_size));
+		storage = reinterpret_cast<char*>(malloc((reserved_size + 1) * Tsize));
+	}
+
+	template<typename CharT, typename Traits>
+	inline void BasicString<CharT, Traits>::_add_null_char(size_type pos)
+	{
+		new(Tstorage + pos) CharT(0);	//How to get a null character?
 	}
 
 	template<typename CharT, typename Traits>
@@ -366,80 +374,88 @@ namespace DataStructures
 	}
 
 	template<typename CharT, typename Traits>
-	inline BasicString<CharT, Traits>::BasicString() noexcept : length(0)
+	inline BasicString<CharT, Traits>::BasicString() noexcept : string_length(0)
 	{
-		_allocate(1);
+		_allocate(0);
+		_add_null_char(string_length);
 	}
 
 	template<typename CharT, typename Traits>
-	inline BasicString<CharT, Traits>::BasicString(size_type n, const CharT & val) : length(0)
+	inline BasicString<CharT, Traits>::BasicString(size_type n, const CharT & val) : string_length(0)
 	{
 		_allocate(n);
-		while (length < n)
+		while (string_length < n)
 		{
-			//_construct(length++, val);	//In case of construction failure
-			_construct(length, val);
-			++length;
+			//_construct(string_length++, val);	//In case of construction failure
+			_construct(string_length, val);
+			++string_length;
 		}
+		_add_null_char(string_length);
 	}
 
 	template<typename CharT, typename Traits>
-	inline BasicString<CharT, Traits>::BasicString(const BasicString & other, size_type pos, size_type n) : length(0)
+	inline BasicString<CharT, Traits>::BasicString(const BasicString & other, size_type pos, size_type n) : string_length(0)
 	{
-		if (n == npos)
+		if (pos < other.size() && n <= other.size() - pos)	//Caution! Overflow may occur!
+		{
+			_allocate(n);
+			memcpy(storage, other.storage + pos * Tsize, n * Tsize);
+			string_length = n;
+		}
+		else if (pos < other.size() && n > other.size() - pos)
 		{
 			size_type cnt = other.size() - pos;
 			_allocate(cnt);
 			memcpy(storage, other.storage + pos * Tsize, cnt * Tsize);
-			length = cnt;
-		}
-		else if (pos + n <= origin.size())
-		{
-			_allocate(n);
-			memcpy(storage, other.storage + pos * Tsize, n * Tsize);
-			length = n;
+			string_length = cnt;
 		}
 		else
 		{
 			throw std::out_of_range{ "Assigned range exceed end of source string." };
 		}
+		_add_null_char(string_length);
 	}
 
 	template<typename CharT, typename Traits>
-	inline BasicString<CharT, Traits>::BasicString(const CharT * s, size_type n) : length(0)
+	inline BasicString<CharT, Traits>::BasicString(const CharT * s, size_type n) : string_length(0)
 	{
 		_allocate(n);
 		memcpy(storage, s, n * Tsize);
-		length = n;
+		string_length = n;
+		_add_null_char(string_length);
 	}
 
 	template<typename CharT, typename Traits>
-	inline BasicString<CharT, Traits>::BasicString(const CharT * s) : length(0)
+	inline BasicString<CharT, Traits>::BasicString(const CharT * s) : string_length(0)
 	{
-		size_type n = sizeof(s) / Tsize;
+		size_type n = Traits::length(s);
 		_allocate(n);
-		memcpy(storage, s, sizeof(s));
-		length = n;
+		memcpy(storage, s, n * Tsize);
+		string_length = n;
+		_add_null_char(string_length);
 	}
 
 	template<typename CharT, typename Traits>
-	inline BasicString<CharT, Traits>::BasicString(std::initializer_list<CharT> init) : length(0)
+	inline BasicString<CharT, Traits>::BasicString(std::initializer_list<CharT> init) : string_length(0)
 	{
 		size_type n = init.size();
 		_allocate(n);
 		for (const CharT& elem : init)
 		{
-			_construct(Tstorage)
+			_construct(string_length, elem);
+			++string_length;
 		}
-		length = n;
+		string_length = n;
+		_add_null_char(string_length);
 	}
 
 	template<typename CharT, typename Traits>
-	inline BasicString<CharT, Traits>::BasicString(const BasicString & origin) : length(0)
+	inline BasicString<CharT, Traits>::BasicString(const BasicString & origin) : string_length(0)
 	{
-		_allocate(origin.length);
-		memcpy(storage, origin.storage, Tsize * origin.length);
-		length = origin.length;
+		_allocate(origin.string_length);
+		memcpy(storage, origin.storage, Tsize * origin.string_length);
+		string_length = origin.string_length;
+		_add_null_char(string_length);
 	}
 
 	template<typename CharT, typename Traits>
@@ -495,7 +511,10 @@ namespace DataStructures
 	template<typename CharT, typename Traits>
 	inline BasicString<CharT, Traits> & BasicString<CharT, Traits>::assign(const BasicString & origin)
 	{
-		swap(BasicString(origin));
+		if (this != &origin)
+		{
+			swap(BasicString(origin));
+		}
 		return *this;
 	}
 
@@ -509,7 +528,10 @@ namespace DataStructures
 	template<typename CharT, typename Traits>
 	inline BasicString<CharT, Traits> & BasicString<CharT, Traits>::assign(BasicString && origin)
 	{
-		swap(origin);
+		if (this != &origin)
+		{
+			swap(origin);
+		}
 		return *this;
 	}
 
@@ -536,7 +558,7 @@ namespace DataStructures
 
 	template<typename CharT, typename Traits>
 	template<typename InputIterator, typename SFINAE_MAGIC>
-	inline BasicString<CharT, Traits>::BasicString(InputIterator first, InputIterator last) : length(0)
+	inline BasicString<CharT, Traits>::BasicString(InputIterator first, InputIterator last) : string_length(0)
 	{
 		size_type n = std::distance(first, last);
 		_allocate(n);
@@ -544,11 +566,12 @@ namespace DataStructures
 		{
 			_construct(Tstorage + i, *first++);
 		}
-		length = n;
+		string_length = n;
+		_add_null_char(string_length);
 	}
 
 	template<typename CharT, typename Traits>
-	template<typename InputIterator, >
+	template<typename InputIterator, typename SFINAE_MAGIC>
 	inline BasicString<CharT, Traits> & BasicString<CharT, Traits>::assign(InputIterator first, InputIterator last)
 	{
 		swap(BasicString(first, last));
@@ -559,44 +582,232 @@ namespace DataStructures
 	inline void BasicString<CharT, Traits>::swap(BasicString & other) noexcept
 	{
 		using std::swap;
-		swap(storage, origin.storage);
-		swap(reserved_size, origin.reserved_size);
-		swap(length, origin.length);
+		swap(storage, other.storage);
+		swap(reserved_size, other.reserved_size);
+		swap(string_length, other.string_length);
 	}
 
 	template<typename CharT, typename Traits>
 	inline void BasicString<CharT, Traits>::clear() noexcept
 	{
-		for (size_t i = 0; i < length; i++)
+		for (size_t i = 0; i < string_length; i++)
 		{
 			Tstorage[i].~CharT();
 		}
 	}
 
 	template<typename CharT, typename Traits>
-	inline reference BasicString<CharT, Traits>::at(size_type index)
+	inline typename BasicString<CharT, Traits>::reference BasicString<CharT, Traits>::at(size_type index)
 	{
-		if (index < length)
+		if (index < string_length)
 			return Tstorage[index];
 		throw std::out_of_range{ "Accessed position is out of range!" };
 	}
+
 	template<typename CharT, typename Traits>
-	inline const_reference BasicString<CharT, Traits>::at(size_type index) const
+	inline typename BasicString<CharT, Traits>::const_reference BasicString<CharT, Traits>::at(size_type index) const
 	{
-		if (index < length)
+		if (index < string_length)
 			return Tstorage[index];
 		throw std::out_of_range{ "Accessed position is out of range!" };
 	}
+
 	template<typename CharT, typename Traits>
-	inline reference BasicString<CharT, Traits>::operator[](size_type index)
+	inline typename BasicString<CharT, Traits>::reference BasicString<CharT, Traits>::operator[](size_type index)
 	{
 		return Tstorage[index];
 	}
+
 	template<typename CharT, typename Traits>
-	inline const_reference BasicString<CharT, Traits>::operator[](size_type index) const
+	inline typename BasicString<CharT, Traits>::const_reference BasicString<CharT, Traits>::operator[](size_type index) const
 	{
 		return Tstorage[index];
 	}
-}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::reference BasicString<CharT, Traits>::front()
+	{
+		return Tstorage[0];
+	}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::const_reference BasicString<CharT, Traits>::front() const
+	{
+		return Tstorage[0];
+	}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::reference BasicString<CharT, Traits>::back()
+	{
+		return Tstorage[string_length - 1];
+	}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::const_reference BasicString<CharT, Traits>::back() const
+	{
+		return Tstorage[string_length - 1];
+	}
+
+	template<typename CharT, typename Traits>
+	inline CharT * BasicString<CharT, Traits>::data()
+	{
+		return Tstorage;
+	}
+
+	template<typename CharT, typename Traits>
+	inline const CharT * BasicString<CharT, Traits>::data() const
+	{
+		return Tstorage;
+	}
+
+	template<typename CharT, typename Traits>
+	inline const CharT * BasicString<CharT, Traits>::c_str() const
+	{
+		return Tstorage;
+	}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::iterator BasicString<CharT, Traits>::begin()
+	{
+		return Tstorage;
+	}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::const_iterator BasicString<CharT, Traits>::begin() const
+	{
+		return Tstorage;
+	}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::const_iterator BasicString<CharT, Traits>::cbegin() const
+	{
+		return begin();
+	}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::iterator BasicString<CharT, Traits>::end()
+	{
+		return Tstorage + string_length;
+	}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::const_iterator BasicString<CharT, Traits>::end() const
+	{
+		return Tstorage + string_length;
+	}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::const_iterator BasicString<CharT, Traits>::cend() const
+	{
+		return end();
+	}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::reverse_iterator BasicString<CharT, Traits>::rbegin()
+	{
+		return reverse_iterator(end());
+	}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::const_reverse_iterator BasicString<CharT, Traits>::rbegin() const
+	{
+		return const_reverse_iterator(end());
+	}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::const_reverse_iterator BasicString<CharT, Traits>::crbegin() const
+	{
+		return rbegin();
+	}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::reverse_iterator BasicString<CharT, Traits>::rend()
+	{
+		return reverse_iterator(begin());
+	}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::const_reverse_iterator BasicString<CharT, Traits>::rend() const
+	{
+		return const_reverse_iterator(begin());
+	}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::const_reverse_iterator BasicString<CharT, Traits>::crend() const
+	{
+		return rend();
+	}
+
+	template<typename CharT, typename Traits>
+	inline bool BasicString<CharT, Traits>::empty() const
+	{
+		return string_length == 0;
+	}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::size_type BasicString<CharT, Traits>::size() const
+	{
+		return string_length;
+	}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::size_type BasicString<CharT, Traits>::length() const
+	{
+		return string_length;
+	}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::size_type BasicString<CharT, Traits>::max_size() const
+	{
+		return MAX_STRING_SIZE;
+	}
+
+	template<typename CharT, typename Traits>
+	inline void BasicString<CharT, Traits>::reserve(size_type n)
+	{
+		if (reserved_size >= n)
+		{
+			return;
+		}
+		else
+		{
+			_reallocate(n);
+			return;
+		}
+	}
+
+	template<typename CharT, typename Traits>
+	inline typename BasicString<CharT, Traits>::size_type BasicString<CharT, Traits>::capacity() const
+	{
+		return reserved_size;
+	}
+
+	template<typename CharT, typename Traits>
+	inline void BasicString<CharT, Traits>::shrink_to_fit()
+	{
+		_reallocate(string_length);
+	}
+
+	int       stoi(const String& str, std::size_t* pos = 0, int base = 10);
+	int       stoi(const WString& str, std::size_t* pos = 0, int base = 10);
+	long      stol(const String& str, std::size_t* pos = 0, int base = 10);
+	long      stol(const WString& str, std::size_t* pos = 0, int base = 10);
+	long long stoll(const String& str, std::size_t* pos = 0, int base = 10);
+	long long stoll(const WString& str, std::size_t* pos = 0, int base = 10);
+
+	unsigned long      stoul(const String& str, std::size_t* pos = 0, int base = 10);
+	unsigned long      stoul(const WString& str, std::size_t* pos = 0, int base = 10);
+	unsigned long long stoull(const String& str, std::size_t* pos = 0, int base = 10);
+	unsigned long long stoull(const WString& str, std::size_t* pos = 0, int base = 10);
+
+	float       stof(const String& str, std::size_t* pos = 0);
+	float       stof(const WString& str, std::size_t* pos = 0);
+	double      stod(const String& str, std::size_t* pos = 0);
+	double      stod(const WString& str, std::size_t* pos = 0);
+	long double stold(const String& str, std::size_t* pos = 0);
+	long double stold(const WString& str, std::size_t* pos = 0);
+
+
 	#undef Tstorage
 	#undef Tsize
+}
