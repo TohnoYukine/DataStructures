@@ -41,13 +41,13 @@ int main()
 	_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDOUT);
 
 	//Testers here
-	ConstructorTester();
+	//ConstructorTester();
 	//AssignmentTester();
 	//ElementAccessTester();
 	//IteratorsTester();
 	//CapacityTester();
 	//ModifiersTester();
-	//NonMemberFunctionsTester();
+	NonMemberFunctionsTester();
 
 	//Report all memory leaks
 	_CrtDumpMemoryLeaks();
@@ -59,35 +59,35 @@ void ConstructorTester()
 	//Constructors
 	//(1) Default constructor. Constructs an empty container.
 	DS::Vector<int> vec1;
-	//DS::Vector<string> svec1;
+	DS::Vector<string> svec1;
 	//(2) Constructs the container with count copies of elements with value value.
 	DS::Vector<int> vec2(11, 3);
-	//DS::Vector<string> svec2(11, "Hello");
+	DS::Vector<string> svec2(11, "Hello");
 	//(3) Constructs the container with count default-inserted instances of T. No copies are made.
 	DS::Vector<int> vec3(7);
 	DS::Vector<int> vec3_2(0);
-	//DS::Vector<string> svec3(11);
-	//DS::Vector<string> svec3_2(0);
+	DS::Vector<string> svec3(11);
+	DS::Vector<string> svec3_2(0);
 	//(4) Constructs the container with the contents of the range [first, last).
 	std::vector<int> stlvec{ 0,1,2,3,4,5,6,7,8,9 };
 	DS::Vector<int> vec4(stlvec.begin() + 2, stlvec.end());
 	DS::Vector<int> vec4_2(vec4.begin() + 1, vec4.end());
-	//std::vector<string> stlsvec{ "a","b","c","d","e" };
-	//DS::Vector<string> svec4(stlsvec.begin() + 2, stlsvec.end());
-	//DS::Vector<string> svec4_2(svec4.begin() + 1, svec4.end());
+	std::vector<string> stlsvec{ "a","b","c","d","e" };
+	DS::Vector<string> svec4(stlsvec.begin() + 2, stlsvec.end());
+	DS::Vector<string> svec4_2(svec4.begin() + 1, svec4.end());
 	//(5) Copy constructor. Constructs the container with the copy of the contents of other.
 	DS::Vector<int> vec5(vec3);
-	//DS::Vector<string> svec5(svec3);
+	DS::Vector<string> svec5(svec3);
 	//(6) Move constructor. Constructs the container with the contents of other using move semantics.
 	DS::Vector<int> tempvec(vec4);
 	DS::Vector<int> vec6(std::move(tempvec));
-	//DS::Vector<string> tempsvec(svec4);
-	//DS::Vector<string> svec6(std::move(tempsvec));
+	DS::Vector<string> tempsvec(svec4);
+	DS::Vector<string> svec6(std::move(tempsvec));
 	//(7) Allocator-extended move constructor.
-	////Vector does not use allocator.
+	//Not tested yet.
 	//(8) Constructs the container with the contents of the initializer list.
 	DS::Vector<int> vec7{ 0,1,2,3,4,5,6,7,8,9 };
-	//DS::Vector<string> svec7{ "a","b","c","d","e" };
+	DS::Vector<string> svec7{ "a","b","c","d","e" };
 
 	Print(vec1);
 	Print(vec2);
@@ -100,16 +100,16 @@ void ConstructorTester()
 	Print(vec6);
 	Print(vec7);
 
-	//Print(svec1);
-	//Print(svec2);
-	//Print(svec3);
-	//Print(svec3_2);
-	//Print(svec4);
-	//Print(svec4_2);
-	//Print(svec5);
-	//Print(tempsvec);
-	//Print(svec6);
-	//Print(svec7);
+	Print(svec1);
+	Print(svec2);
+	Print(svec3);
+	Print(svec3_2);
+	Print(svec4);
+	Print(svec4_2);
+	Print(svec5);
+	Print(tempsvec);
+	Print(svec6);
+	Print(svec7);
 }
 
 void AssignmentTester()

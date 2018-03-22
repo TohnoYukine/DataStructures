@@ -628,9 +628,9 @@ namespace DataStructures
 	template<typename T, class Allocator>
 	inline void Vector<T, Allocator>::clear() noexcept
 	{
-		for (size_t i = 0; i < vector_size; i++)
+		while(0 < vector_size)
 		{
-			storage[i].~T();
+			storage[--vector_size].~T();
 		}
 	}
 
