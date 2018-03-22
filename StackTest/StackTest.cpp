@@ -93,6 +93,7 @@ void ConstructorTester()
 	DS::Vector<int> deq{ 1,2,3,4,5,6,7,8,9 };
 	
 	DS::Stack<int> s1(deq);
+	DS::Stack<int, DS::Vector<int>> s5(s1);
 	DS::Stack<int> s2({ 1,2,3,4 });
 	DS::Stack<int> s3(s2);
 	DS::Stack<int> s4(DS::Stack<int>({1, 2, 3, 4, 5, 6}));
@@ -101,6 +102,7 @@ void ConstructorTester()
 	print(s2);
 	print(s3);
 	print(s4);
+	print(s5);
 }
 
 void AssignmentTester()

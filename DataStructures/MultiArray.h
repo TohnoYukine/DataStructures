@@ -7,16 +7,16 @@
 template<typename ElemType, size_t Dimension, template<typename> typename ContainerType = DataStructures::Vector>
 class MultiArray
 {
-	using SliceType = typename std::conditional<Dimension == 1U, ElemType, MultiArray<ElemType, Dimension - 1U, ContainerType>>::type;
-	ContainerType<SliceType> data;
+	using value_type = typename std::conditional<Dimension == 1U, ElemType, MultiArray<ElemType, Dimension - 1U, ContainerType>>::type;
+	ContainerType<value_type> data;
 
 public:
 	MultiArray() = default;
-	MultiArray(const std::initializer_list<SliceType>& ilist) : data(ilist) {}
+	MultiArray(const std::initializer_list<value_type>& ilist) : data(ilist) {}
 
 	template<typename ... SizeType>
-	MultiArray(size_t N, SizeType... args) : data(N, SliceType(args...)) {}
+	MultiArray(size_t N, SizeType... args) : data(N, value_type(args...)) {}
 
-	SliceType& operator[](size_t n) { return data[n]; }
-	void push_back(const SliceType& elem) { data.push_back(elem); }
+	value_type& operator[](size_t n) { return data[n]; }
+	void push_back(const value_type& elem) { data.push_back(elem); }
 };

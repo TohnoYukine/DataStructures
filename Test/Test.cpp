@@ -6,32 +6,25 @@
 #include <iostream>
 #include <forward_list>
 #include <set>
+#include <vector>
 
-template<typename InputIterator>
-void print(InputIterator begin, InputIterator end, char delim = ' ')
+struct User 
 {
-	std::cout << *begin++;
-	while (begin != end)
-		std::cout << delim << *begin++;
-	std::cout << '\n';
-}
+	const char* name;
+	const char* id;
+	int dept;
+};
 
 int main() 
 {
-	//int a = 3, b = 2;
-	//int *pa = &a, *pb = &b;
-	//std::cout << *pa << *pb << a << b << '\n';
-	//std::swap(pa, pb);
-	//std::cout << *pa << *pb << a << b << '\n';
-	//lni::vector<int> vec{ 1,2,3 };
-	//std::forward_list<int> ls{ 1,2,3 };
-	//auto iter = ++++ls.begin();
-	//ls.erase_after(iter);
-	//std::set<int, bool(*)(const int&, const int&)> m_songs({ 2,3,4,5,1,6 }, [](const int& a, const int& b) {return a > b;});
-	//std::cout << *++m_songs.find(3) << '\n';
-	//print(m_songs.begin(), m_songs.end());
-	char a[100];
-	scanf("%s", &a);
-	printf("%s", a);
+	std::vector<User> heads = 
+	{
+		"Ritchie D.M.", "dmr", 11271,
+		"Sethi R.", "ravi", 11272,
+		"Szymanski T.G.", "tgs", 11273,
+		"Schr yer N.L.", "nls", 11274,
+		"Schr yer N.L.", "nls", 11275,
+		"Kernighan B.W.", "bwk", 11276
+	};
 	return 0;
 }
