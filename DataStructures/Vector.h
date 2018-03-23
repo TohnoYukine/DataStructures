@@ -731,13 +731,13 @@ namespace DataStructures
 	template<typename ...Args>
 	inline typename void Vector<T, Allocator>::_construct(size_type pos, Args && ...args)
 	{
-		new(storage + pos) T(std::forward<Args>(args) ...);
+		std::allocator_traits<Allocator>::construct(allocator, storage + pos, std::forward<Args>(args) ...);
 	}
 
 	template<typename T, class Allocator>
 	template<typename ...Args>
 	inline void Vector<T, Allocator>::_construct(iterator iter, Args && ...args)
 	{
-		new(iter) T(std::forward<Args>(args) ...);
+		std::allocator_traits<Allocator>::construct(allocator, iter, std::forward<Args>(args) ...);
 	}
 }
