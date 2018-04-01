@@ -90,7 +90,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\TohnoYukine\Documents\Visual Studio 2017\Projects\C++ Exercise\DataStructures;C:\Users\TohnoYukine\Documents\Visual Studio 2017\Projects\C++ Exercise\DataStructures\Utility;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\TohnoYukine\Documents\Visual Studio 2017\Projects\C++ Exercise\DataStructures;B:\boost\boost_1_63_0;C:\Users\TohnoYukine\Documents\Visual Studio 2017\Projects\C++ Exercise\DataStructures\Utility;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

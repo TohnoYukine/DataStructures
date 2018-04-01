@@ -130,6 +130,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Bitset.h" />
     <ClInclude Include="ForwardList.h" />
     <ClInclude Include="MultiArray.h" />
     <ClInclude Include="Stack.h" />

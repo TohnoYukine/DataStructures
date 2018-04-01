@@ -2,8 +2,10 @@
 #include <stdexcept>
 #include <allocators>
 #include <limits>
+#include <type_traits>
 
-#define MAX_VECTOR_SIZE std::numeric_limits<size_t>::max()
+constexpr size_t MAX_VECTOR_SIZE = std::numeric_limits<size_t>::max();
+constexpr size_t DEFAULT_RESERVED_SIZE = 4U;
 
 namespace DataStructures
 {
@@ -110,9 +112,9 @@ namespace DataStructures
 		template<typename T, class Allocator> friend void swap(Vector<T, Allocator>& lhs, Vector<T, Allocator>& rhs);
 
 	private:
-		size_type reserved_size = 4;
+		size_type reserved_size = DEFAULT_RESERVED_SIZE;
 		size_type vector_size = 0;
-		allocator_type allocator;
+		Allocator allocator;
 		T* storage = nullptr;
 		inline void _reallocate(size_type rsv_sz);
 		inline void _move_storage(T* dest, T* from, size_type n);
@@ -126,13 +128,13 @@ namespace DataStructures
 	template<typename T, class Allocator>
 	inline Vector<T, Allocator>::Vector() noexcept : vector_size(0), allocator(Allocator())
 	{
-		_allocate(4);
+		_allocate(DEFAULT_RESERVED_SIZE);
 	}
 
 	template<typename T, class Allocator>
 	inline Vector<T, Allocator>::Vector(const Allocator & alloc) noexcept : vector_size(0), allocator(alloc)
 	{
-		_allocate(4);
+		_allocate(DEFAULT_RESERVED_SIZE);
 	}
 
 	template<typename T, class Allocator>

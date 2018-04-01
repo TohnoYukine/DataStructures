@@ -2,29 +2,20 @@
 //
 
 #include "stdafx.h"
-#include "SomeVector.h"
+//#include "SomeVector.h"
 #include <iostream>
 #include <forward_list>
 #include <set>
 #include <vector>
 
-struct User 
-{
-	const char* name;
-	const char* id;
-	int dept;
-};
+//constexpr inline unsigned long long fib1(size_t n) { return n <= 1 ? 1 : n * fib1(n - 1); }
+unsigned long long fib2(size_t n){ return n <= 1 ? 1 : n * fib2(n - 1); }
 
 int main() 
 {
-	std::vector<User> heads = 
-	{
-		"Ritchie D.M.", "dmr", 11271,
-		"Sethi R.", "ravi", 11272,
-		"Szymanski T.G.", "tgs", 11273,
-		"Schr yer N.L.", "nls", 11274,
-		"Schr yer N.L.", "nls", 11275,
-		"Kernighan B.W.", "bwk", 11276
-	};
+	//int a = fib1(30);
+	int b = fib2(30);
+	//std::cout << a << '\n';
+	std::cout << b << '\n';
 	return 0;
 }
